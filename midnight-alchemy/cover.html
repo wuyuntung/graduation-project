@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>眼前的黑不是黑 - 提案封面</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #0b0b0b;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        .cover-container {
+            text-align: center;
+            max-width: 600px;
+            width: 90%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 雙光圈霓虹融合視覺效果 */
+        .logo-area {
+            position: relative;
+            width: 280px;
+            height: 180px;
+            margin-bottom: 40px;
+        }
+
+        .glow-circle {
+            position: absolute;
+            width: 140px;
+            height: 140px;
+            border-radius: 45% 55% 50% 50% / 45% 45% 55% 55%; /* 有機不規則流體感 */
+            filter: blur(15px);
+            opacity: 0.8;
+            animation: float-glow 6s infinite ease-in-out;
+        }
+
+        .circle-left {
+            background: linear-gradient(135deg, #ff4500, #ffcc00);
+            left: 20px;
+            top: 20px;
+        }
+
+        .circle-right {
+            background: linear-gradient(135deg, #0077ff, #00ffaa);
+            right: 20px;
+            top: 20px;
+            animation-delay: -3s;
+        }
+
+        /* 標題與內文 */
+        h1 {
+            font-size: 48px;
+            font-weight: 900;
+            color: #ffdd67;
+            letter-spacing: 4px;
+            margin: 10px 0 20px 0;
+            text-shadow: 0 0 20px rgba(255, 221, 103, 0.3);
+        }
+
+        .subtitle {
+            font-size: 16px;
+            color: #888888;
+            letter-spacing: 6px;
+            margin-bottom: 50px;
+            font-weight: 300;
+        }
+
+        /* 進入按鈕 */
+        .start-btn {
+            background-color: transparent;
+            color: #ffdd67;
+            border: 2px solid #ffdd67;
+            padding: 16px 50px;
+            font-size: 18px;
+            font-weight: bold;
+            letter-spacing: 4px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+            box-shadow: 0 0 15px rgba(255, 221, 103, 0.1);
+        }
+
+        .start-btn:hover {
+            background-color: #ffdd67;
+            color: #0b0b0b;
+            box-shadow: 0 0 30px #ffdd67;
+            transform: scale(1.05);
+        }
+
+        /* 右下角標語 */
+        .footer-tag {
+            position: absolute;
+            bottom: 30px;
+            right: 40px;
+            font-size: 13px;
+            color: #444444;
+            letter-spacing: 2px;
+            font-style: italic;
+        }
+
+        /* 霓虹呼吸動畫 */
+        @keyframes float-glow {
+            0%, 100% {
+                transform: translateY(0) scale(1) rotate(0deg);
+                filter: blur(15px);
+            }
+            50% {
+                transform: translateY(-10px) scale(1.05) rotate(10deg);
+                filter: blur(22px);
+                opacity: 0.9;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="cover-container">
+        <div class="logo-area">
+            <div class="glow-circle circle-left"></div>
+            <div class="glow-circle circle-right"></div>
+        </div>
+
+        <h1>眼前的黑不是黑</h1>
+        <div class="subtitle">一場彩色黑眼圈的負負得正回收站計畫</div>
+
+        <button class="start-btn" onclick="navigateToQuiz()">進入回收程序</button>
+    </div>
+
+    <div class="footer-tag">「進來前滿臉疲容，出去後負負得正」</div>
+
+    <script>
+        // 跳轉到同一個資料夾下的 index.html
+        function navigateToQuiz() {
+            window.location.href = "./index.html";
+        }
+    </script>
+</body>
+</html>
