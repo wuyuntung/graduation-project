@@ -553,18 +553,28 @@
 
     // 點擊前往最終角色與 QR 頁面
     function goToCharacterPage() {
-        if (camera) { camera.stop(); }
-        if (animationFrameId) { cancelAnimationFrame(animationFrameId); }
+        // 1. 先強制關閉相機追蹤，釋放鏡頭
+        if (camera) { 
+            try { camera.stop(); } catch(e) { console.log(e); }
+        }
         
-        // 物理毀滅兩張大圖防擋滑鼠
+        // 2. 徹底斬斷背景的 requestAnimationFrame 動畫迴圈
+        if (animationFrameId) { 
+            cancelAnimationFrame(animationFrameId); 
+            animationFrameId = null; 
+        }
+        
+        // 3. 物理毀滅兩張 3000px 大圖，確保滑鼠絕對不會被隱形遮罩擋住
         const lImg = document.getElementById('left-eye-img');
         const rImg = document.getElementById('right-eye-img');
         if (lImg) { lImg.remove(); }
         if (rImg) { rImg.remove(); }
 
+        // 4. 🌟 先切換 HTML 分頁顯示，讓最後一頁進入網頁可見視野！
         document.getElementById('result-page').style.display = 'none';
         document.getElementById('character-page').style.display = 'block';
         
+        // 5. 🌟 搶先在畫面上把圖片、化身名字、趣味語錄都寫好
         const charImgElement = document.getElementById('final-char-img');
         if (charImgElement) {
             charImgElement.src = characterImages[detectedColor];
@@ -576,23 +586,28 @@
         document.getElementById('char-page-title').innerText = `核心化身：${originalCharName}`;
         document.getElementById('quote-text-final').innerText = originalQuote;
 
-        // 🌟 核心分流修正：網頁拍照後，自動上傳至免費匿名圖床，將「短網址」塞給 QR Code！
+        // 右側條碼區先恢復成預設提示
+        const qrContainer = document.getElementById('qrcode-container');
+        if (qrContainer) {
+            qrContainer.innerHTML = '證書沖洗中...';
+        }
+
+        // 6. 🌟 終極時序修正：等 500 毫秒，等瀏覽器在「下一頁」把圖片和文字都渲染排版完畢後，才對它拍照！
         setTimeout(() => {
             const targetCard = document.getElementById('my-certificate-card');
             
+            // 這時候卡片已經完美呈現在下一頁了，絕對拍得到！
             html2canvas(targetCard, {
-                backgroundColor: "#141414",
+                backgroundColor: "#141414", // 卡片底色
                 useCORS: true,
                 scale: 1.2
             }).then(canvas => {
-                // 1. 抓到 Base64 乾淨圖檔
                 const base64Image = canvas.toDataURL("image/png").split(',')[1];
                 
-                // 2. 透過免費圖床 API 默默進行上傳 (利用 FormData)
+                // 上傳到圖床
                 let formData = new FormData();
                 formData.append("image", base64Image);
                 
-                // 呼叫免費匿名圖床 API (這裡免註冊免金鑰，非常適合學生專案展示)
                 fetch("https://api.imgbb.com/1/upload?key=6d20715c33e4213383e69e73b357857a", {
                     method: "POST",
                     body: formData
@@ -600,16 +615,13 @@
                 .then(response => response.json())
                 .then(result => {
                     if (result.success) {
-                        // 🌟 3. 上傳成功！拿到這張圖片專屬的線上短網址
-                        const hostedImageUrl = result.data.url; 
+                        const hostedImageUrl = result.data.url; // 拿到拍好的純卡片圖片短網址
                         
-                        const qrContainer = document.getElementById('qrcode-container');
+                        // 順利在下一頁把 QR Code 渲染出來！
                         if (qrContainer) {
-                            qrContainer.innerHTML = ''; // 清空字樣
-                            
-                            // 🌟 4. 把短網址做成 QR Code，密度極低、100% 完美秒解秒掃！
+                            qrContainer.innerHTML = ''; // 清空「沖洗中」
                             qrCodeInstance = new QRCode(qrContainer, {
-                                text: hostedImageUrl, 
+                                text: hostedImageUrl, // 手機掃描直接打開這張生成的卡片圖片
                                 width: 140, 
                                 height: 140,
                                 colorDark : "#000000",
@@ -622,16 +634,15 @@
                     }
                 })
                 .catch(err => {
-                    // 備用防線：如果學校網域或現場網路阻擋 API，自動降級為生成本機目前網址，防畫面空白
-                    const qrContainer = document.getElementById('qrcode-container');
+                    // 網路防線降級：若圖床掛掉，至少生成當前網址
                     if (qrContainer) {
                         qrContainer.innerHTML = '';
                         new QRCode(qrContainer, { text: window.location.href, width: 140, height: 140 });
                     }
-                    console.log("備用生成原網址", err);
+                    console.error("圖床API失敗，降級生成網址", err);
                 });
             });
-        }, 500);
+        }, 500); // 延遲 500 毫秒，給瀏覽器排版加載圖片的喘息時間
     }
 
     function resetQuizToCover() {
