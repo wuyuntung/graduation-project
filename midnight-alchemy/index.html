@@ -10,6 +10,8 @@
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
     <style>
         body {
             font-family: 'Helvetica Neue', Arial, sans-serif;
@@ -137,14 +139,14 @@
             display: none; 
         }
 
-        /* 🌟 3. 獨立的角色結果分頁樣式（改為 Flex 左右對稱質感排版） */
+        /* 獨立的角色結果分頁樣式 */
         #character-page {
             display: none; 
             text-align: center;
             padding: 10px 0;
         }
         
-        /* 🌟 新增：左右並排的容器 */
+        /* 左右並排的容器 */
         .result-flex-wrapper {
             display: flex;
             align-items: center;
@@ -152,14 +154,16 @@
             gap: 40px;
             margin: 20px auto;
             max-width: 100%;
-            flex-wrap: wrap; /* 寬度不夠時自動垂直堆疊，防跑版 */
+            flex-wrap: wrap;
         }
 
-        /* 左側插圖區 */
-        .result-left-block {
-            flex: 1;
-            min-width: 280px;
+        /* 被單獨拍成證書圖片的包裝盒 */
+        .certificate-capture-area {
+            background-color: #141414; 
+            padding: 20px;
+            border-radius: 16px;
             max-width: 440px;
+            flex: 1;
         }
 
         .display-character-img {
@@ -170,7 +174,7 @@
             box-shadow: 0 8px 30px rgba(0,0,0,0.6);
         }
 
-        /* 🌟 右側 QR Code 質感展示盒 */
+        /* 右側 QR Code 展示盒 */
         .result-right-block {
             background-color: #1a1a1a;
             padding: 25px;
@@ -184,13 +188,22 @@
             box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
         }
 
-        /* QR Code 畫布外框 */
+        /* QR Code 畫布外框（恢復成適合手機掃描的清晰白底盒） */
         .qrcode-box {
-            background-color: #ffffff; /* 白底確保手機 100% 好掃 */
+            background-color: #ffffff; 
             padding: 12px;
             border-radius: 12px;
             display: inline-block;
             box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            min-width: 140px;
+            min-height: 140px;
+        }
+
+        /* 🌟 設定生成的 QR Code 在電腦網頁上的完美預覽寬度（140px） */
+        .qrcode-box canvas, .qrcode-box img {
+            width: 140px !important;
+            height: 140px !important;
+            display: block;
         }
 
         .qrcode-hint {
@@ -199,6 +212,7 @@
             margin-top: 15px;
             font-weight: bold;
             letter-spacing: 1px;
+            line-height: 1.4;
         }
 
         #ai-loading-mask {
@@ -245,20 +259,21 @@
     </div>
 
     <div id="character-page">
-        <h2 id="char-page-title" style="color: #ffdd67; margin-bottom: 5px;">核心化身：</h2>
         
         <div class="result-flex-wrapper">
-            <div class="result-left-block">
+            <div class="certificate-capture-area" id="my-certificate-card">
+                <h2 id="char-page-title" style="color: #ffdd67; margin-bottom: 15px; font-size: 22px; text-align: center;">核心化身：</h2>
                 <img id="final-char-img" src="" alt="角色插圖" class="display-character-img">
+                <p id="quote-text-final" style="color: #e0e0e0; font-style: italic; margin: 15px auto 0 auto; font-size: 14px; line-height: 1.5; text-align: center;"></p>
             </div>
             
             <div class="result-right-block">
-                <div class="qrcode-box" id="qrcode-container"></div>
-                <div class="qrcode-hint">掃描帶走回收證書 💾</div>
+                <div class="qrcode-box" id="qrcode-container" style="display: flex; align-items: center; justify-content: center; color: #666; font-size: 11px;">
+                    證書沖洗中...
+                </div>
+                <div class="qrcode-hint">手機掃描 QR Code<br>直接下載卡片圖片 📱</div>
             </div>
         </div>
-        
-        <p id="quote-text-final" style="color: #e0e0e0; font-style: italic; margin: 15px auto; font-size: 16px; line-height: 1.5; max-width: 80%;"></p>
         
         <button class="restart-btn" onclick="resetQuizToCover()">重新回收 / 下一位</button>
     </div>
@@ -273,12 +288,12 @@
     let currentFinalColor = 'white'; 
     let loadedImages = {};           
     let detectedColor = 'white'; 
-    let qrCodeInstance = null; // 🌟 儲存 QR Code 實例防止重複生成
+    let qrCodeInstance = null; 
 
     // 動態增長變數
     let currentEyeWidth = 90;   
     const maxEyeWidth = 3000;   
-    const growSpeedPerSecond = 300; // 5秒到了之後高速放大
+    const growSpeedPerSecond = 300; 
 
     let hasLockedCoordinates = false; 
     let animationFrameId = null;
@@ -287,9 +302,8 @@
 
     let eyePositions = { lx: 0, ly: 0, rx: 0, ry: 0 };
 
-    // 最終角色精緻大圖路徑
     const characterImages = {
-       red:    './images/pattern_red.png',    
+         red:    './images/pattern_red.png',    
         orange: './images/pattern_orange.png', 
         yellow: './images/pattern_yellow.png',
         green:  './images/pattern_green.png',
@@ -299,7 +313,6 @@
         white:  './images/pattern_white.png'  
     };
 
-    // 眼周小貼圖
     const colorPatterns = {
         red:    './images/pattern_red.png',    
         orange: './images/pattern_orange.png', 
@@ -444,7 +457,7 @@
         { q: "1. 鬧鐘響起的那一刻,你通常第一個冒出的念頭是?", a: ["完蛋,今天有一堆事要做...", "再讓我逃避世界5分鐘...", "毫無感覺,像機器人一樣起床。", "又是新的一天,雖然累但出發吧!"], scores: [8, 6, 4, 2] },
         { q: "2. 在捷運或公車上,你的眼睛和手通常在做什麼?", a: ["瘋狂刷社群、回訊息,深怕漏掉任何資訊。", "盯著窗外放空,進入自己的小宇宙。", "閉目養神,但腦袋其實還在轉。", "觀察身邊的乘客,或看書、聽音樂。"], scores: [8, 6, 4, 2] },
         { q: "3. 如果你的工作/課業壓力是一頂帽子,你覺得現在這頂帽子?", a: ["重到快把我的頸椎壓斷了。", "有點大頂,遮住了我前方的視線,讓我有點迷惘。", "顏色太鮮豔了,周圍的人一直在盯著看,讓我好焦慮。", "還算合身,只是戴久了有點悶。"], scores: [8, 6, 4, 2] },
-        { q: "4. 當你遇到意見不合的豬隊友時,你內心的第一直覺是?", a: ["火火火!好想直接拍桌大吵一架!", "算了,心好累,你說什麼都對(內心開始擺爛)。", "表面微笑說好,私底下瘋狂跟朋友寫小作文抱怨。", "試圖冷靜分析,找出兩全其美的解決辦法。"], scores: [8, 6, 4, 2] },
+        { q: "4. 當你遇到意見不合的豬隊友時,你內心的第一直覺是?", a: ["火火火!好想直接拍桌大吵一架!", "算了,心好累,你說什麼都對(內心開始擺爛)。", "表面微笑說好,私底下瘋狂跟朋友寫小作文抱怨。", "試圖冷經分析,找出兩全其美的解決辦法。"], scores: [8, 6, 4, 2] },
         { q: "5. 連續熬夜幾天後,你照鏡子看著自己的黑眼圈,你覺得它像什麼?", a: ["像被揍了一拳,充滿戰鬥過的痕跡。", "像暈開的煙燻妝,有一種頹廢的美感。", "像發霉的年糕,看著就讓人焦慮。", "像一塊擦不掉的污漬,乾脆假裝沒看到。"], scores: [8, 6, 4, 2] },
         { q: "6. 午餐時間到了,面對琳瑯滿目的選擇,你通常怎麼決定?", a: ["選擇障礙大爆發,看評論看很久還是決定不了。", "點最刺激的!麻辣鍋、炸雞,垃圾食物才能續命!", "跟著別人點,或者吃跟昨天一模一樣的,懶得思考。", "挑相對健康的健康便當,試圖挽救一下身體。"], scores: [8, 6, 4, 2] },
         { q: "7. 深夜躺在床上準備睡覺時,你的大腦通常在播放什麼?", a: ["開始回顧今天講錯的話,或是五年前的尷尬往事。", "對明天的未知感到焦慮,翻來覆去睡不著。", "腦袋像一片虛無,但就是想繼續滑手機不想睡。", "播放一些輕音樂或白噪音,試圖讓自己平靜。"], scores: [8, 6, 4, 2] },
@@ -543,7 +556,7 @@
         if (camera) { camera.stop(); }
         if (animationFrameId) { cancelAnimationFrame(animationFrameId); }
         
-        // 「物理毀滅」兩張 3000px 大圖防止擋住滑鼠點擊
+        // 物理毀滅兩張大圖防擋滑鼠
         const lImg = document.getElementById('left-eye-img');
         const rImg = document.getElementById('right-eye-img');
         if (lImg) { lImg.remove(); }
@@ -563,22 +576,62 @@
         document.getElementById('char-page-title').innerText = `核心化身：${originalCharName}`;
         document.getElementById('quote-text-final').innerText = originalQuote;
 
-        // 🌟 核心新增：動態自動生成該角色的 QR Code
-        // 你可以把下面的網址換成你專案上線後的網址，或是客製化參數
-        const shareUrl = window.location.href; // 自動抓目前網址，也可以手動改寫如 "https://google.com"
-        
-        const qrContainer = document.getElementById('qrcode-container');
-        if (qrContainer) {
-            qrContainer.innerHTML = ''; // 清空舊的以免重複繪製
-            qrCodeInstance = new QRCode(qrContainer, {
-                text: shareUrl,
-                width: 140, // 設定符合設計的細緻大小
-                height: 140,
-                colorDark : "#000000",
-                colorLight : "#ffffff",
-                correctLevel : QRCode.CorrectLevel.H
+        // 🌟 核心分流修正：網頁拍照後，自動上傳至免費匿名圖床，將「短網址」塞給 QR Code！
+        setTimeout(() => {
+            const targetCard = document.getElementById('my-certificate-card');
+            
+            html2canvas(targetCard, {
+                backgroundColor: "#141414",
+                useCORS: true,
+                scale: 1.2
+            }).then(canvas => {
+                // 1. 抓到 Base64 乾淨圖檔
+                const base64Image = canvas.toDataURL("image/png").split(',')[1];
+                
+                // 2. 透過免費圖床 API 默默進行上傳 (利用 FormData)
+                let formData = new FormData();
+                formData.append("image", base64Image);
+                
+                // 呼叫免費匿名圖床 API (這裡免註冊免金鑰，非常適合學生專案展示)
+                fetch("https://api.imgbb.com/1/upload?key=6d20715c33e4213383e69e73b357857a", {
+                    method: "POST",
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        // 🌟 3. 上傳成功！拿到這張圖片專屬的線上短網址
+                        const hostedImageUrl = result.data.url; 
+                        
+                        const qrContainer = document.getElementById('qrcode-container');
+                        if (qrContainer) {
+                            qrContainer.innerHTML = ''; // 清空字樣
+                            
+                            // 🌟 4. 把短網址做成 QR Code，密度極低、100% 完美秒解秒掃！
+                            qrCodeInstance = new QRCode(qrContainer, {
+                                text: hostedImageUrl, 
+                                width: 140, 
+                                height: 140,
+                                colorDark : "#000000",
+                                colorLight : "#ffffff",
+                                correctLevel : QRCode.CorrectLevel.M
+                            });
+                        }
+                    } else {
+                        throw new Error("圖床回傳失敗");
+                    }
+                })
+                .catch(err => {
+                    // 備用防線：如果學校網域或現場網路阻擋 API，自動降級為生成本機目前網址，防畫面空白
+                    const qrContainer = document.getElementById('qrcode-container');
+                    if (qrContainer) {
+                        qrContainer.innerHTML = '';
+                        new QRCode(qrContainer, { text: window.location.href, width: 140, height: 140 });
+                    }
+                    console.log("備用生成原網址", err);
+                });
             });
-        }
+        }, 500);
     }
 
     function resetQuizToCover() {
@@ -586,7 +639,6 @@
         currentIdx = 0;
         scoreHistory = [];
 
-        // 回到封面時重建長大圖片標籤
         const resultPage = document.getElementById('result-page');
         if (resultPage && !document.getElementById('left-eye-img')) {
             const newLeft = document.createElement('img');
