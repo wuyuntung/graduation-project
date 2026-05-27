@@ -10,6 +10,8 @@
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
     <style>
         body {
             font-family: 'Helvetica Neue', Arial, sans-serif;
@@ -20,7 +22,7 @@
             align-items: center;
             height: 100vh;
             margin: 0;
-            overflow: hidden; /* 防止貼圖滿出網頁時出現瀏覽器捲軸 */
+            overflow: hidden; 
         }
         
         /* 黑色卡片容器 */
@@ -97,7 +99,7 @@
             transition: all 0.3s ease;
             box-shadow: 0 0 15px rgba(255, 221, 103, 0.1);
             position: relative;
-            z-index: 99999 !important; /* 確保層級最高 */
+            z-index: 99999 !important; 
             pointer-events: auto !important;
         }
         .restart-btn:hover {
@@ -106,7 +108,7 @@
             box-shadow: 0 0 25px #ffdd67;
         }
 
-        #result-page { display: none; }
+        #result-page, #character-page, #qrcode-page { display: none; }
         
         #result-page #tracking-container {
             margin-top: 0px !important;
@@ -137,33 +139,14 @@
             display: none; 
         }
 
-        /* 獨立的角色結果分頁樣式 */
-        #character-page {
-            display: none; 
-            text-align: center;
-            padding: 10px 0;
-        }
-        
-        /* 左右並排的 Flex 容器 */
-        .result-flex-wrapper {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 40px;
-            margin: 20px auto;
-            max-width: 100%;
-            flex-wrap: wrap;
-        }
-
-        /* 左側實體證書卡片區 */
+        /* 🌟 純淨無瑕的角色證書大包裝盒：也就是我們要被拍照的最終畫面 */
         .certificate-capture-area {
             background-color: #141414; 
-            padding: 25px;
-            border-radius: 16px;
-            max-width: 440px;
-            flex: 1;
-            border: 1px solid #252525;
-            box-sizing: border-box;
+            padding: 30px 25px;
+            border-radius: 24px;
+            max-width: 480px;
+            margin: 0 auto;
+            border: 1px solid #222;
         }
 
         .display-character-img {
@@ -172,44 +155,36 @@
             display: block;
             border-radius: 12px;
             box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+            margin-bottom: 15px;
         }
 
-        /* 右側 QR Code 展示盒 */
-        .result-right-block {
+        /* 🌟 再下一頁：獨立的 QR Code 質感展示盒 */
+        .qrcode-panel {
             background-color: #1a1a1a;
-            padding: 25px;
+            padding: 35px 25px;
             border-radius: 20px;
             border: 1px solid #2a2a2a;
-            display: flex;
+            display: inline-flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-width: 200px;
             box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+            margin-top: 15px;
         }
 
-        /* QR Code 畫布外框 */
-        .qrcode-box {
+        .qrcode-white-box {
             background-color: #ffffff; 
-            padding: 12px;
-            border-radius: 12px;
+            padding: 15px;
+            border-radius: 16px;
             display: inline-block;
             box-shadow: 0 4px 15px rgba(0,0,0,0.4);
         }
 
-        .qrcode-box canvas, .qrcode-box img {
-            width: 140px !important;
-            height: 140px !important;
+        /* 強制限制 QR Code 的畫布寬度，使其在大螢幕上精緻好看 */
+        .qrcode-white-box canvas, .qrcode-white-box img {
+            width: 180px !important;
+            height: 180px !important;
             display: block;
-        }
-
-        .qrcode-hint {
-            font-size: 13px;
-            color: #ffdd67;
-            margin-top: 15px;
-            font-weight: bold;
-            letter-spacing: 1px;
-            line-height: 1.4;
         }
 
         #ai-loading-mask {
@@ -217,40 +192,6 @@
             background: #141414; z-index: 1000; 
             display: flex; justify-content: center; align-items: center; 
             border-radius: 24px; flex-direction: column;
-        }
-
-        /* 🌟 核心新增：專門給手機開啟時的 CSS 樣式修正（響應式排版） */
-        @media (max-width: 600px) {
-            body {
-                height: auto;
-                min-height: 100vh;
-                padding: 15px 0;
-                box-sizing: border-box;
-                overflow-y: auto; /* 手機版允許上下捲動，防卡片塞不下切掉 */
-            }
-            .container {
-                padding: 15px;
-                width: 95%;
-                background-color: transparent; /* 手機直接融入背景，讓裡面的卡片最亮眼 */
-                border: none;
-                box-shadow: none;
-            }
-            .certificate-capture-area {
-                width: 100%;
-                max-width: 100%;
-                padding: 20px;
-                background-color: #141414; /* 保持精美黑底盒 */
-                border: 1px solid #333;
-                box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-            }
-            #char-page-title {
-                font-size: 20px !important;
-                margin-bottom: 12px !important;
-            }
-            #quote-text-final {
-                font-size: 13px !important;
-                line-height: 1.4 !important;
-            }
         }
     </style>
 </head>
@@ -290,20 +231,26 @@
     </div>
 
     <div id="character-page">
-        <div class="result-flex-wrapper">
-            <div class="certificate-capture-area" id="my-certificate-card">
-                <h2 id="char-page-title" style="color: #ffdd67; margin-bottom: 15px; font-size: 22px; text-align: center;">核心化身：</h2>
-                <img id="final-char-img" src="" alt="角色插圖" class="display-character-img">
-                <p id="quote-text-final" style="color: #e0e0e0; font-style: italic; margin: 15px auto 0 auto; font-size: 14px; line-height: 1.5; text-align: center;"></p>
-            </div>
-            
-            <div class="result-right-block" id="right-qr-box">
-                <div class="qrcode-box" id="qrcode-container"></div>
-                <div class="qrcode-hint">手機掃描 QR Code<br>同步帶走這張證書畫面 📱</div>
-            </div>
+        <div class="certificate-capture-area" id="my-certificate-card">
+            <h2 id="char-page-title" style="color: #ffdd67; margin-bottom: 20px; font-size: 24px; text-align: center;">核心化身：</h2>
+            <img id="final-char-img" src="" alt="角色插圖" class="display-character-img">
+            <p id="quote-text-final" style="color: #e0e0e0; font-style: italic; margin: 15px auto 0 auto; font-size: 15px; line-height: 1.5; text-align: center; max-width: 90%;"></p>
         </div>
         
-        <button class="restart-btn" id="final-action-btn" onclick="resetQuizToCover()">重新回收 / 下一位</button>
+        <button class="restart-btn" onclick="goToQrCodePage()">生成證書 QR Code 📄</button>
+    </div>
+
+    <div id="qrcode-page">
+        <h2 style="color: #ffdd67; margin-bottom: 10px;">負能量回收證書已沖洗完畢！</h2>
+        <div style="font-size: 14px; color: #aaa; margin-bottom: 20px;">請使用手機掃描下方條碼，即可儲存完整的證書畫面。</div>
+        
+        <div class="qrcode-panel">
+            <div class="qrcode-white-box" id="qrcode-container">條碼調配中...</div>
+            <div style="font-size: 13px; color: #ffdd67; margin-top: 15px; font-weight: bold; letter-spacing: 1px;">手機掃描 存走這張大圖 📲</div>
+        </div>
+        
+        <br>
+        <button class="restart-btn" onclick="resetQuizToCover()">重新回收 / 下一位</button>
     </div>
 </div>
 
@@ -331,14 +278,14 @@
     let eyePositions = { lx: 0, ly: 0, rx: 0, ry: 0 };
 
     const characterImages = {
-       red:    './images/pattern_red.png',    
+        red:    './images/pattern_red.png',    
         orange: './images/pattern_orange.png', 
         yellow: './images/pattern_yellow.png',
         green:  './images/pattern_green.png',
         blue:   './images/pattern_blue.png',
         purple: './images/pattern_purple.png',
         black:  './images/pattern_black.png',  
-        white:  './images/pattern_white.png'  
+        white:  './images/pattern_white.png'   
     };
 
     const colorPatterns = {
@@ -352,44 +299,7 @@
         white:  './images/pattern_white.png'   
     };
 
-    // 網頁初始化時，第一時間檢查網址有沒有手機掃描帶來的參數
-    function checkUrlParameters() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const resultColor = urlParams.get('result');
-        
-        if (resultColor && characterImages[resultColor]) {
-            // 攔截並進入最終結果排版
-            document.getElementById("ai-loading-mask").style.display = "none";
-            document.getElementById('quiz-page').style.display = 'none';
-            document.getElementById('result-page').style.display = 'none';
-            document.getElementById('character-page').style.display = 'block';
-            
-            // 🌟 手機自己看結果，不需要 QR Code 跟按鈕
-            document.getElementById('right-qr-box').style.display = 'none';
-            document.getElementById('final-action-btn').style.display = 'none';
-            
-            detectedColor = resultColor;
-            let charName = ""; let quote = "";
-            if (resultColor === "red") { charName = "大同電鍋"; quote = "「心裡一把火,飯都熟了。今天誰敢惹我,我就送他去『大同』世界。」"; }
-            else if (resultColor === "yellow") { charName = "垃圾車"; quote = "「大腦塞滿垃圾資訊,逼逼逼!好想把自己跟著垃圾車一起載走...」"; }
-            else if (resultColor === "blue") { charName = "藍白拖"; quote = "「今天真的是Monday Blue,真的什麼事都想『拖』啊『拖』...」"; }
-            else if (resultColor === "green") { charName = "茄紙袋"; quote = "「凡事追求和平、green(原諒)對方...再壓抑下去,我遲早變綠色郵筒被塞爆。」"; }
-            else if (resultColor === "purple") { charName = "九份芋頭"; quote = "「生活就像夜市的芋圓,看起來Q彈,心裡其實全是一顆顆沉重的『內耗』,真讓人『芋』哭無淚。」"; }
-            else if (resultColor === "orange") { charName = "中秋月餅/蛋黃酥"; quote = "「天天被迫營業、面帶微笑。我的心早就跟月餅裡的蛋黃一樣,被生活給烤乾了。」"; }
-            else if (resultColor === "black") { charName = "夜市豬血糕"; quote = "「靈魂已經被生活揉躪得像豬血糕一樣。別跟我談夢想,老子現在只想『躺平』。」"; }
-            else { charName = "小籠包/包子/肉圓"; quote = "「四大皆空,徹底麻木。老子的熱情已經被生活給『蒸』發了,現在只想當個薪水小偷。」"; }
-            
-            document.getElementById('final-char-img').src = characterImages[resultColor];
-            document.getElementById('char-page-title').innerText = `核心化身：${charName}`;
-            document.getElementById('quote-text-final').innerText = quote;
-            return true; 
-        }
-        return false;
-    }
-
     function initAiCore() {
-        if (checkUrlParameters()) return;
-
         videoElement = document.getElementById("webcam");
         canvasElement = document.getElementById("output_canvas");
         canvasCtx = canvasElement.getContext("2d");
@@ -525,7 +435,7 @@
         { q: "4. 當你遇到意見不合的豬隊友時,你內心的第一直覺是?", a: ["火火火!好想直接拍桌大吵一架!", "算了,心好累,你說什麼都對(內心開始擺爛)。", "表面微笑說好,私底下瘋狂跟朋友寫小作文抱怨。", "試圖冷靜分析,找出兩全其美的解決辦法。"], scores: [8, 6, 4, 2] },
         { q: "5. 連續熬夜幾天後,你照鏡子看著自己的黑眼圈,你覺得它像什麼?", a: ["像被揍了一拳,充滿戰鬥過的痕跡。", "像暈開的煙燻妝,有一種頹廢的美感。", "像發霉的年糕,看著就讓人焦慮。", "像一塊擦不掉的污漬,乾脆假裝沒看到。"], scores: [8, 6, 4, 2] },
         { q: "6. 午餐時間到了,面對琳瑯滿目的選擇,你通常怎麼決定?", a: ["選擇障礙大爆發,看評論看很久還是決定不了。", "點最刺激的!麻辣鍋、炸雞,垃圾食物才能續命!", "跟著別人點,或者吃跟昨天一模一樣的,懶得思考。", "挑相對健康的健康便當,試圖挽救一下身體。"], scores: [8, 6, 4, 2] },
-        { q: "7. 深夜躺在床上準備睡覺時,你的大腦通常在播放什麼?", a: ["開始回顧今天講錯的話,或是五年前的尷尬往事。", "對明天的未知感到焦慮,翻來覆去睡不著。", "腦袋像一片虛無,但就是想繼續滑手機不想睡。", "播放一些輕音樂或白噪音,試圖讓自己平靜。"], scores: [8, 6, 4, 2] },
+        { q: "7. 深夜躺在床上準備睡覺時,你的大腦通常在播放什麼?", a: ["開始回顧今天講錯的話,或是五五年前的尷尬往事。", "對明天的未知感到焦慮,翻來覆去睡不著。", "腦袋像一片虛無,但就是想繼續滑手機不想睡。", "播放一些輕音樂或白噪音,試圖讓自己平靜。"], scores: [8, 6, 4, 2] },
         { q: "8. 如果可以用一種聲音來形容你這週的心理狀態,那會是?", a: ["救護車的警報聲(嗶啵嗶啵),非常緊繃。", "除濕機的低頻運轉聲(嗡嗡嗡),沉悶又除不乾淨。", "貓咪的呼嚕聲或下雨聲,平靜但帶有一點疲憊。", "遊樂園的背景雜音,很熱鬧但聽久了頭很暈.。"], scores: [8, 6, 4, 2] },
         { q: "9. 朋友突然臨時取消了週末的聚會,你當下的真實感受是?", a: ["太棒了!可以理直氣壯在家躺平,內心一陣狂喜。", "有點失落和寂寂,是不是自己哪裡做不好?", "突然空下來很慌,立刻開始找別人或排滿其他行程。", "沒關係,那就順其自然調整計畫吧。"], scores: [8, 6, 4, 2] }
     ];
@@ -616,7 +526,7 @@
         startTrackingAR(color);
     }
 
-    // 前往最終角色介紹頁
+    // 前往第 3 頁：角色介紹頁（純淨排版，沒有條碼）
     function goToCharacterPage() {
         if (camera) { camera.stop(); }
         if (animationFrameId) { cancelAnimationFrame(animationFrameId); }
@@ -639,22 +549,46 @@
         
         document.getElementById('char-page-title').innerText = `核心化身：${originalCharName}`;
         document.getElementById('quote-text-final').innerText = originalQuote;
+    }
 
-        // 🌟 自動合成帶有結果參數的完整網址丟給 QR Code
-        const shareResultUrl = window.location.origin + window.location.pathname + "?result=" + detectedColor;
-
+    // 🌟 核心升級：前往第 4 頁（再下一頁）才開始截圖和生成 QR Code！
+    function goToQrCodePage() {
+        // 先切換到最終下載頁面
+        document.getElementById('character-page').style.display = 'none';
+        document.getElementById('qrcode-page').style.display = 'block';
+        
         const qrContainer = document.getElementById('qrcode-container');
         if (qrContainer) {
-            qrContainer.innerHTML = ''; 
-            qrCodeInstance = new QRCode(qrContainer, {
-                text: shareResultUrl, 
-                width: 140, 
-                height: 140,
-                colorDark : "#000000",
-                colorLight : "#ffffff",
-                correctLevel : QRCode.CorrectLevel.M
-            });
+            qrContainer.innerHTML = '條碼沖洗中...';
         }
+
+        // 🌟 此時第 3 頁的 `#my-certificate-card` 依然完好保存在記憶體中，而且上面乾乾淨淨，完全沒有 QR code 穿幫
+        const targetCard = document.getElementById('my-certificate-card');
+        
+        html2canvas(targetCard, {
+            backgroundColor: "#141414",
+            useCORS: true,
+            scale: 1 // 降低倍率確保 Base64 資料不要太長
+        }).then(canvas => {
+            const imgDataUrl = canvas.toDataURL("image/png");
+            
+            if (qrContainer) {
+                qrContainer.innerHTML = ''; // 清空提示
+                
+                // 完美生成高密度、包含一整頁內容圖片的 QR Code
+                qrCodeInstance = new QRCode(qrContainer, {
+                    text: imgDataUrl, // 手機掃描後，打開的就是那一整張帶有黑框、字、圖片的最終完整畫面！
+                    width: 400, 
+                    height: 400,
+                    colorDark : "#000000",
+                    colorLight : "#ffffff",
+                    correctLevel : QRCode.CorrectLevel.L
+                });
+            }
+        }).catch(err => {
+            if (qrContainer) { qrContainer.innerText = "沖洗失敗"; }
+            console.error(err);
+        });
     }
 
     function resetQuizToCover() {
@@ -677,6 +611,9 @@
             resultPage.appendChild(newRight);
         }
 
+        // 重置頁面回到第一題與封面
+        document.getElementById('qrcode-page').style.display = 'none';
+        document.getElementById('quiz-page').style.display = 'block';
         window.location.href = "./cover.html";
     }
 
