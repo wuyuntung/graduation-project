@@ -144,7 +144,7 @@
             padding: 10px 0;
         }
         
-        /* 左右並排的容器 */
+        /* 左右並排的 Flex 容器 */
         .result-flex-wrapper {
             display: flex;
             align-items: center;
@@ -155,20 +155,22 @@
             flex-wrap: wrap;
         }
 
-        /* 左側實體卡片區 */
+        /* 左側實體證書卡片區 */
         .certificate-capture-area {
             background-color: #141414; 
-            padding: 20px;
+            padding: 25px;
             border-radius: 16px;
             max-width: 440px;
             flex: 1;
+            border: 1px solid #252525;
+            box-sizing: border-box;
         }
 
         .display-character-img {
             width: 100%; 
             height: auto;
             display: block;
-            border-radius: 16px;
+            border-radius: 12px;
             box-shadow: 0 8px 30px rgba(0,0,0,0.6);
         }
 
@@ -215,6 +217,40 @@
             background: #141414; z-index: 1000; 
             display: flex; justify-content: center; align-items: center; 
             border-radius: 24px; flex-direction: column;
+        }
+
+        /* 🌟 核心新增：專門給手機開啟時的 CSS 樣式修正（響應式排版） */
+        @media (max-width: 600px) {
+            body {
+                height: auto;
+                min-height: 100vh;
+                padding: 15px 0;
+                box-sizing: border-box;
+                overflow-y: auto; /* 手機版允許上下捲動，防卡片塞不下切掉 */
+            }
+            .container {
+                padding: 15px;
+                width: 95%;
+                background-color: transparent; /* 手機直接融入背景，讓裡面的卡片最亮眼 */
+                border: none;
+                box-shadow: none;
+            }
+            .certificate-capture-area {
+                width: 100%;
+                max-width: 100%;
+                padding: 20px;
+                background-color: #141414; /* 保持精美黑底盒 */
+                border: 1px solid #333;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            }
+            #char-page-title {
+                font-size: 20px !important;
+                margin-bottom: 12px !important;
+            }
+            #quote-text-final {
+                font-size: 13px !important;
+                line-height: 1.4 !important;
+            }
         }
     </style>
 </head>
@@ -263,7 +299,7 @@
             
             <div class="result-right-block" id="right-qr-box">
                 <div class="qrcode-box" id="qrcode-container"></div>
-                <div class="qrcode-hint">手機掃描 QR Code<br>同步在手機查看這一頁 📱</div>
+                <div class="qrcode-hint">手機掃描 QR Code<br>同步帶走這張證書畫面 📱</div>
             </div>
         </div>
         
@@ -302,7 +338,7 @@
         blue:   './images/pattern_blue.png',
         purple: './images/pattern_purple.png',
         black:  './images/pattern_black.png',  
-        white:  './images/pattern_white.png'      
+        white:  './images/pattern_white.png'  
     };
 
     const colorPatterns = {
@@ -316,23 +352,22 @@
         white:  './images/pattern_white.png'   
     };
 
-    // 🌟 核心功能一：網頁初始化時，第一時間檢查網址有沒有手機掃描帶來的參數？
+    // 網頁初始化時，第一時間檢查網址有沒有手機掃描帶來的參數
     function checkUrlParameters() {
         const urlParams = new URLSearchParams(window.location.search);
         const resultColor = urlParams.get('result');
         
         if (resultColor && characterImages[resultColor]) {
-            // 🌟 核心分流：如果是手機掃碼進來的，直接進入最後的角色介紹排版！
+            // 攔截並進入最終結果排版
             document.getElementById("ai-loading-mask").style.display = "none";
             document.getElementById('quiz-page').style.display = 'none';
             document.getElementById('result-page').style.display = 'none';
             document.getElementById('character-page').style.display = 'block';
             
-            // 隱藏右側的 QR Code 面板與底部的下一位按鈕（因為手機自己就是終點頁了，不需要再掃碼跟重新測驗）
+            // 🌟 手機自己看結果，不需要 QR Code 跟按鈕
             document.getElementById('right-qr-box').style.display = 'none';
             document.getElementById('final-action-btn').style.display = 'none';
             
-            // 根據參數動態寫入藍白拖、茄芷袋等內容
             detectedColor = resultColor;
             let charName = ""; let quote = "";
             if (resultColor === "red") { charName = "大同電鍋"; quote = "「心裡一把火,飯都熟了。今天誰敢惹我,我就送他去『大同』世界。」"; }
@@ -347,13 +382,12 @@
             document.getElementById('final-char-img').src = characterImages[resultColor];
             document.getElementById('char-page-title').innerText = `核心化身：${charName}`;
             document.getElementById('quote-text-final').innerText = quote;
-            return true; // 代表成功攔截，不需要執行題目初始化
+            return true; 
         }
         return false;
     }
 
     function initAiCore() {
-        // 先檢查是不是手機看結果網址
         if (checkUrlParameters()) return;
 
         videoElement = document.getElementById("webcam");
@@ -606,17 +640,14 @@
         document.getElementById('char-page-title').innerText = `核心化身：${originalCharName}`;
         document.getElementById('quote-text-final').innerText = originalQuote;
 
-        // 🌟 核心功能二：動態合成「專屬角色頁面的短網址」丟給 QR Code！
-        // 組合出來的網址像： http://127.0.0.1:5502/index.html?result=blue
+        // 🌟 自動合成帶有結果參數的完整網址丟給 QR Code
         const shareResultUrl = window.location.origin + window.location.pathname + "?result=" + detectedColor;
 
         const qrContainer = document.getElementById('qrcode-container');
         if (qrContainer) {
-            qrContainer.innerHTML = ''; // 清空
-            
-            // 🌟 建立超乾淨、任何手機秒掃秒解的 QR Code
+            qrContainer.innerHTML = ''; 
             qrCodeInstance = new QRCode(qrContainer, {
-                text: shareResultUrl, // 手機掃描後，打開的就是這個直接跳轉到這一頁的特製網址！
+                text: shareResultUrl, 
                 width: 140, 
                 height: 140,
                 colorDark : "#000000",
