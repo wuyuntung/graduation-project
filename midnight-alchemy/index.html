@@ -10,8 +10,6 @@
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    
     <style>
         body {
             font-family: 'Helvetica Neue', Arial, sans-serif;
@@ -157,7 +155,7 @@
             flex-wrap: wrap;
         }
 
-        /* 被單獨拍成證書圖片的包裝盒 */
+        /* 左側實體卡片區 */
         .certificate-capture-area {
             background-color: #141414; 
             padding: 20px;
@@ -188,18 +186,15 @@
             box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
         }
 
-        /* QR Code 畫布外框（恢復成適合手機掃描的清晰白底盒） */
+        /* QR Code 畫布外框 */
         .qrcode-box {
             background-color: #ffffff; 
             padding: 12px;
             border-radius: 12px;
             display: inline-block;
             box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-            min-width: 140px;
-            min-height: 140px;
         }
 
-        /* 🌟 設定生成的 QR Code 在電腦網頁上的完美預覽寬度（140px） */
         .qrcode-box canvas, .qrcode-box img {
             width: 140px !important;
             height: 140px !important;
@@ -259,7 +254,6 @@
     </div>
 
     <div id="character-page">
-        
         <div class="result-flex-wrapper">
             <div class="certificate-capture-area" id="my-certificate-card">
                 <h2 id="char-page-title" style="color: #ffdd67; margin-bottom: 15px; font-size: 22px; text-align: center;">核心化身：</h2>
@@ -267,15 +261,13 @@
                 <p id="quote-text-final" style="color: #e0e0e0; font-style: italic; margin: 15px auto 0 auto; font-size: 14px; line-height: 1.5; text-align: center;"></p>
             </div>
             
-            <div class="result-right-block">
-                <div class="qrcode-box" id="qrcode-container" style="display: flex; align-items: center; justify-content: center; color: #666; font-size: 11px;">
-                    證書沖洗中...
-                </div>
-                <div class="qrcode-hint">手機掃描 QR Code<br>直接下載卡片圖片 📱</div>
+            <div class="result-right-block" id="right-qr-box">
+                <div class="qrcode-box" id="qrcode-container"></div>
+                <div class="qrcode-hint">手機掃描 QR Code<br>同步在手機查看這一頁 📱</div>
             </div>
         </div>
         
-        <button class="restart-btn" onclick="resetQuizToCover()">重新回收 / 下一位</button>
+        <button class="restart-btn" id="final-action-btn" onclick="resetQuizToCover()">重新回收 / 下一位</button>
     </div>
 </div>
 
@@ -303,14 +295,14 @@
     let eyePositions = { lx: 0, ly: 0, rx: 0, ry: 0 };
 
     const characterImages = {
-         red:    './images/pattern_red.png',    
+       red:    './images/pattern_red.png',    
         orange: './images/pattern_orange.png', 
         yellow: './images/pattern_yellow.png',
         green:  './images/pattern_green.png',
         blue:   './images/pattern_blue.png',
         purple: './images/pattern_purple.png',
         black:  './images/pattern_black.png',  
-        white:  './images/pattern_white.png'  
+        white:  './images/pattern_white.png'      
     };
 
     const colorPatterns = {
@@ -324,7 +316,46 @@
         white:  './images/pattern_white.png'   
     };
 
+    // 🌟 核心功能一：網頁初始化時，第一時間檢查網址有沒有手機掃描帶來的參數？
+    function checkUrlParameters() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const resultColor = urlParams.get('result');
+        
+        if (resultColor && characterImages[resultColor]) {
+            // 🌟 核心分流：如果是手機掃碼進來的，直接進入最後的角色介紹排版！
+            document.getElementById("ai-loading-mask").style.display = "none";
+            document.getElementById('quiz-page').style.display = 'none';
+            document.getElementById('result-page').style.display = 'none';
+            document.getElementById('character-page').style.display = 'block';
+            
+            // 隱藏右側的 QR Code 面板與底部的下一位按鈕（因為手機自己就是終點頁了，不需要再掃碼跟重新測驗）
+            document.getElementById('right-qr-box').style.display = 'none';
+            document.getElementById('final-action-btn').style.display = 'none';
+            
+            // 根據參數動態寫入藍白拖、茄芷袋等內容
+            detectedColor = resultColor;
+            let charName = ""; let quote = "";
+            if (resultColor === "red") { charName = "大同電鍋"; quote = "「心裡一把火,飯都熟了。今天誰敢惹我,我就送他去『大同』世界。」"; }
+            else if (resultColor === "yellow") { charName = "垃圾車"; quote = "「大腦塞滿垃圾資訊,逼逼逼!好想把自己跟著垃圾車一起載走...」"; }
+            else if (resultColor === "blue") { charName = "藍白拖"; quote = "「今天真的是Monday Blue,真的什麼事都想『拖』啊『拖』...」"; }
+            else if (resultColor === "green") { charName = "茄紙袋"; quote = "「凡事追求和平、green(原諒)對方...再壓抑下去,我遲早變綠色郵筒被塞爆。」"; }
+            else if (resultColor === "purple") { charName = "九份芋頭"; quote = "「生活就像夜市的芋圓,看起來Q彈,心裡其實全是一顆顆沉重的『內耗』,真讓人『芋』哭無淚。」"; }
+            else if (resultColor === "orange") { charName = "中秋月餅/蛋黃酥"; quote = "「天天被迫營業、面帶微笑。我的心早就跟月餅裡的蛋黃一樣,被生活給烤乾了。」"; }
+            else if (resultColor === "black") { charName = "夜市豬血糕"; quote = "「靈魂已經被生活揉躪得像豬血糕一樣。別跟我談夢想,老子現在只想『躺平』。」"; }
+            else { charName = "小籠包/包子/肉圓"; quote = "「四大皆空,徹底麻木。老子的熱情已經被生活給『蒸』發了,現在只想當個薪水小偷。」"; }
+            
+            document.getElementById('final-char-img').src = characterImages[resultColor];
+            document.getElementById('char-page-title').innerText = `核心化身：${charName}`;
+            document.getElementById('quote-text-final').innerText = quote;
+            return true; // 代表成功攔截，不需要執行題目初始化
+        }
+        return false;
+    }
+
     function initAiCore() {
+        // 先檢查是不是手機看結果網址
+        if (checkUrlParameters()) return;
+
         videoElement = document.getElementById("webcam");
         canvasElement = document.getElementById("output_canvas");
         canvasCtx = canvasElement.getContext("2d");
@@ -457,7 +488,7 @@
         { q: "1. 鬧鐘響起的那一刻,你通常第一個冒出的念頭是?", a: ["完蛋,今天有一堆事要做...", "再讓我逃避世界5分鐘...", "毫無感覺,像機器人一樣起床。", "又是新的一天,雖然累但出發吧!"], scores: [8, 6, 4, 2] },
         { q: "2. 在捷運或公車上,你的眼睛和手通常在做什麼?", a: ["瘋狂刷社群、回訊息,深怕漏掉任何資訊。", "盯著窗外放空,進入自己的小宇宙。", "閉目養神,但腦袋其實還在轉。", "觀察身邊的乘客,或看書、聽音樂。"], scores: [8, 6, 4, 2] },
         { q: "3. 如果你的工作/課業壓力是一頂帽子,你覺得現在這頂帽子?", a: ["重到快把我的頸椎壓斷了。", "有點大頂,遮住了我前方的視線,讓我有點迷惘。", "顏色太鮮豔了,周圍的人一直在盯著看,讓我好焦慮。", "還算合身,只是戴久了有點悶。"], scores: [8, 6, 4, 2] },
-        { q: "4. 當你遇到意見不合的豬隊友時,你內心的第一直覺是?", a: ["火火火!好想直接拍桌大吵一架!", "算了,心好累,你說什麼都對(內心開始擺爛)。", "表面微笑說好,私底下瘋狂跟朋友寫小作文抱怨。", "試圖冷經分析,找出兩全其美的解決辦法。"], scores: [8, 6, 4, 2] },
+        { q: "4. 當你遇到意見不合的豬隊友時,你內心的第一直覺是?", a: ["火火火!好想直接拍桌大吵一架!", "算了,心好累,你說什麼都對(內心開始擺爛)。", "表面微笑說好,私底下瘋狂跟朋友寫小作文抱怨。", "試圖冷靜分析,找出兩全其美的解決辦法。"], scores: [8, 6, 4, 2] },
         { q: "5. 連續熬夜幾天後,你照鏡子看著自己的黑眼圈,你覺得它像什麼?", a: ["像被揍了一拳,充滿戰鬥過的痕跡。", "像暈開的煙燻妝,有一種頹廢的美感。", "像發霉的年糕,看著就讓人焦慮。", "像一塊擦不掉的污漬,乾脆假裝沒看到。"], scores: [8, 6, 4, 2] },
         { q: "6. 午餐時間到了,面對琳瑯滿目的選擇,你通常怎麼決定?", a: ["選擇障礙大爆發,看評論看很久還是決定不了。", "點最刺激的!麻辣鍋、炸雞,垃圾食物才能續命!", "跟著別人點,或者吃跟昨天一模一樣的,懶得思考。", "挑相對健康的健康便當,試圖挽救一下身體。"], scores: [8, 6, 4, 2] },
         { q: "7. 深夜躺在床上準備睡覺時,你的大腦通常在播放什麼?", a: ["開始回顧今天講錯的話,或是五年前的尷尬往事。", "對明天的未知感到焦慮,翻來覆去睡不著。", "腦袋像一片虛無,但就是想繼續滑手機不想睡。", "播放一些輕音樂或白噪音,試圖讓自己平靜。"], scores: [8, 6, 4, 2] },
@@ -551,31 +582,19 @@
         startTrackingAR(color);
     }
 
-    // 點擊前往最終角色與 QR 頁面
-    // 🌟 100% 成功解決方案：直接將角色大圖網址綁定至 QR Code
+    // 前往最終角色介紹頁
     function goToCharacterPage() {
-        // 1. 先強制關閉相機追蹤，釋放鏡頭
-        if (camera) { 
-            try { camera.stop(); } catch(e) { console.log(e); }
-        }
+        if (camera) { camera.stop(); }
+        if (animationFrameId) { cancelAnimationFrame(animationFrameId); }
         
-        // 2. 徹底斬斷背景的 requestAnimationFrame 動畫迴圈
-        if (animationFrameId) { 
-            cancelAnimationFrame(animationFrameId); 
-            animationFrameId = null; 
-        }
-        
-        // 3. 物理毀滅兩張 3000px 大圖，防止擋住滑鼠點擊
         const lImg = document.getElementById('left-eye-img');
         const rImg = document.getElementById('right-eye-img');
         if (lImg) { lImg.remove(); }
         if (rImg) { rImg.remove(); }
 
-        // 4. 切換 HTML 分頁顯示
         document.getElementById('result-page').style.display = 'none';
         document.getElementById('character-page').style.display = 'block';
         
-        // 5. 在左側卡片上寫入對應的化身大圖與文字
         const charImgElement = document.getElementById('final-char-img');
         if (charImgElement) {
             charImgElement.src = characterImages[detectedColor];
@@ -587,18 +606,17 @@
         document.getElementById('char-page-title').innerText = `核心化身：${originalCharName}`;
         document.getElementById('quote-text-final').innerText = originalQuote;
 
-        // 6. 🌟 【核心修正】拋棄不穩定的截圖與外網圖床，直接抓取大圖的絕對網址！
-        // window.location.origin 會抓到像是 http://127.0.0.1:5502
-        // 組合出來就是：http://127.0.0.1:5502/images/char_blue.png
-        const targetImageUrl = window.location.origin + window.location.pathname.replace('index.html', '') + characterImages[detectedColor].replace('./', '');
+        // 🌟 核心功能二：動態合成「專屬角色頁面的短網址」丟給 QR Code！
+        // 組合出來的網址像： http://127.0.0.1:5502/index.html?result=blue
+        const shareResultUrl = window.location.origin + window.location.pathname + "?result=" + detectedColor;
 
-        // 7. 順暢地在右側直接渲染出這張「圖片網址」的 QR Code
         const qrContainer = document.getElementById('qrcode-container');
         if (qrContainer) {
-            qrContainer.innerHTML = ''; // 清空內容
+            qrContainer.innerHTML = ''; // 清空
             
+            // 🌟 建立超乾淨、任何手機秒掃秒解的 QR Code
             qrCodeInstance = new QRCode(qrContainer, {
-                text: targetImageUrl, // 🌟 手機掃描後，會直接用手機瀏覽器單獨打開這張藍白拖/茄芷袋的純圖片！
+                text: shareResultUrl, // 手機掃描後，打開的就是這個直接跳轉到這一頁的特製網址！
                 width: 140, 
                 height: 140,
                 colorDark : "#000000",
