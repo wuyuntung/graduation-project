@@ -106,26 +106,10 @@
             box-shadow: 0 0 25px #ffdd67;
         }
 
-        /* 🌟 下載按鈕專用強調色 */
-        .download-btn-style {
-            background-color: #ffdd67 !important;
-            color: #000000 !important;
-            box-shadow: 0 0 15px rgba(255, 221, 103, 0.4);
-        }
-        .download-btn-style:hover {
-            background-color: #ffffff !important;
-            box-shadow: 0 0 25px #ffffff;
-        }
-
         .restart-btn:disabled {
             cursor: not-allowed;
             opacity: 0.5;
             border-color: #555;
-            color: #999;
-            box-shadow: none;
-        }
-        .restart-btn:disabled:hover {
-            background-color: transparent;
             color: #999;
             box-shadow: none;
         }
@@ -170,9 +154,7 @@
             flex-wrap: wrap;
             margin-top: 25px;
         }
-        #preview-page .restart-btn {
-            margin-top: 0 !important;
-        }
+        #preview-page .restart-btn { margin-top: 0 !important; }
 
         .display-character-img,
         .display-photo-result-img {
@@ -184,7 +166,7 @@
             object-fit: contain;
         }
 
-        /* 最後雙欄結果大外框 */
+        /* 🌟 最終大雙欄版面排版盒 */
         .photo-result-shell {
             width: min(100%, 1180px);
             min-height: 55vh;
@@ -194,10 +176,21 @@
             align-items: center;
         }
 
-        .result-media-column, .result-info-column {
+        /* 🌟 給 html2canvas 拍照對焦的左側獨立證書卡片大區塊 */
+        .result-media-column {
             display: flex;
             flex-direction: column;
             gap: 14px;
+            justify-content: center;
+            background-color: #141414; /* 確保拍照時底色黑亮好看 */
+            padding: 15px;
+            border-radius: 24px;
+        }
+
+        .result-info-column {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
             justify-content: center;
         }
 
@@ -208,17 +201,15 @@
             padding: 12px;
         }
         .result-media-card img {
-            max-height: 24vh;
+            max-height: 30vh;
         }
 
-        #photo-page-title, #photo-quote-text {
-            text-align: left;
-        }
+        #photo-page-title, #photo-quote-text { text-align: left; }
         #photo-quote-text {
             color: #e0e0e0;
             font-style: italic;
             margin: 0;
-            font-size: 15px;
+            font-size: 16px;
             line-height: 1.6;
         }
 
@@ -229,19 +220,19 @@
             gap: 12px;
         }
         #qr-code-container {
-            width: 140px;
-            height: 140px;
-            padding: 10px;
+            width: 156px;
+            height: 156px;
+            padding: 12px;
             background: #ffffff;
-            border-radius: 14px;
+            border-radius: 18px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
         }
         .qr-copy {
             color: #aaa;
-            font-size: 13px;
-            line-height: 1.5;
+            font-size: 14px;
+            line-height: 1.6;
             text-align: left;
             margin: 0;
         }
@@ -252,9 +243,7 @@
             justify-content: flex-start;
             flex-wrap: wrap;
         }
-        .result-actions .restart-btn {
-            margin-top: 0 !important;
-        }
+        .result-actions .restart-btn { margin-top: 0 !important; }
 
         #ai-loading-mask {
             position: absolute; top:0; left:0; width:100%; height:100%; 
@@ -263,32 +252,49 @@
             border-radius: 24px; flex-direction: column;
         }
 
-        /* 🌟 核心新增：專門用來拍照輸出、絕對純淨的「後台證書小卡片區」 */
-        /* 使用 position: absolute 移出視線，既能被 html2canvas 拍到，又絕對不會在畫面上穿幫 */
-        #my-clean-certificate-card {
-            position: absolute;
-            left: -9999px;
-            top: -9999px;
-            background-color: #141414;
-            padding: 30px;
-            border-radius: 24px;
-            width: 450px;
-            text-align: center;
-            box-sizing: border-box;
-        }
-        #my-clean-certificate-card img {
-            width: 100%;
-            height: auto;
-            border-radius: 16px;
-            margin: 15px auto;
-            display: block;
-        }
-
-        @media (max-width: 900px) {
-            .photo-result-shell { grid-template-columns: 1fr; }
-            .result-media-card img { max-height: none; }
-            .result-actions, .qr-section { justify-content: center; align-items: center; }
-            #photo-page-title, #photo-quote-text, .qr-copy { text-align: center; }
+        /* 🌟 核心新增：給使用者用手機掃描打開時的「滿版極致證書卡片」CSS 樣式 */
+        @media (max-width: 768px) {
+            body {
+                overflow-y: auto !important;
+                height: auto;
+                min-height: 100vh;
+                padding: 10px 0;
+                box-sizing: border-box;
+            }
+            .container {
+                width: 96% !important;
+                padding: 15px !important;
+                box-shadow: none !important;
+                border: none !important;
+                background: transparent !important; /* 融入手機底色 */
+            }
+            /* 讓拍照那欄在手機上直接放大變成一張完美的直立式大海報卡片 */
+            .result-media-column {
+                width: 100% !important;
+                padding: 25px 20px !important;
+                border: 1px solid #333 !important;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.8) !important;
+            }
+            .photo-result-shell {
+                grid-template-columns: 1fr !important;
+                gap: 15px !important;
+            }
+            .result-media-card img {
+                max-height: none !important; /* 解除高度限制讓圖片完整撐開 */
+            }
+            #photo-page-title {
+                text-align: center !important;
+                font-size: 22px !important;
+                margin-bottom: 5px !important;
+            }
+            /* 提示手機用戶可以直接長按儲存這張他們用網頁拼好的精彩大圖 */
+            .qr-copy {
+                text-align: center !important;
+                color: #ffdd67 !important;
+                font-weight: bold;
+                font-size: 14px !important;
+                margin-top: 10px;
+            }
         }
     </style>
 </head>
@@ -342,13 +348,14 @@
         <img id="final-char-img" src="" alt="角色插圖" class="display-character-img">
         <p id="quote-text-final" style="color: #e0e0e0; font-style: italic; margin: 15px auto; font-size: 16px; line-height: 1.5; max-width: 80%;"></p>
         <div class="result-actions" style="justify-content: center;">
-            <button class="restart-btn" onclick="saveCurrentResult()">查看並儲存結果</button>
+            <button class="restart-btn" onclick="saveCurrentResult()">儲存結果</button>
         </div>
     </div>
 
     <div id="photo-result-page">
         <div class="photo-result-shell">
-            <div class="result-media-column">
+            
+            <div class="result-media-column" id="my-capture-target-box">
                 <h2 id="photo-page-title" style="color: #ffdd67; margin: 0;">核心化身：</h2>
                 <div class="result-media-card">
                     <img id="photo-result-char-img" src="" alt="角色插圖" class="display-character-img">
@@ -356,28 +363,24 @@
                 <div class="result-media-card">
                     <img id="photo-result-photo-img" src="" alt="拍照結果" class="display-photo-result-img">
                 </div>
+                <p id="photo-quote-text" style="margin-top: 10px;"></p>
             </div>
-            <div class="result-info-column">
-                <p id="photo-quote-text"></p>
+            
+            <div class="result-info-column" id="right-control-panel">
                 <div class="qr-section">
                     <div id="qr-code-container"></div>
-                    <p class="qr-copy">掃描此 QR 碼可隨時重新開啟目前結果狀態網頁。</p>
+                    <p class="qr-copy" id="qr-status-text">掃描此 QR 碼即可直接在手機同步查看這張完整的精彩證書畫面！</p>
                 </div>
                 <div class="result-actions">
-                    <button class="restart-btn download-btn-style" onclick="saveCurrentResult()">📥 儲存證書圖片</button>
+                    <button class="restart-btn" style="background-color: #ffdd67; color: #000;" onclick="triggerPcCanvasDownload()">📥 下載證書圖片到電腦</button>
                 </div>
                 <div class="result-actions">
                     <button class="restart-btn" onclick="resetQuizToCover()">重新回收 / 下一位</button>
                 </div>
             </div>
+            
         </div>
     </div>
-</div>
-
-<div id="my-clean-certificate-card">
-    <h2 id="card-render-title" style="color: #ffdd67; font-size: 24px; margin: 0 0 15px 0;">核心化身：</h2>
-    <img id="card-render-img" src="" alt="化身插圖">
-    <p id="card-render-quote" style="color: #e0e0e0; font-style: italic; font-size: 15px; line-height: 1.5; margin: 15px 0 0 0;"></p>
 </div>
 
 <script>
@@ -392,7 +395,6 @@
     let capturedPhotoDataUrl = '';
     let qrCodeInstance = null;
 
-    // 時間控速動畫變數
     let currentEyeWidth = 70;   
     const maxEyeWidth = 3200;   
     const growSpeedPerSecond = 180; 
@@ -407,49 +409,30 @@
 
     let eyePositions = { lx: 0, ly: 0, rx: 0, ry: 0 };
 
-    // 角色精緻大圖路徑對應
     const characterImages = {
-         red:    './images/pattern_red.png',
-        orange: './images/pattern_orange.png',
+        red:    './images/pattern_red.png',    // 🌟 自動修正大圖路徑專用代碼
+        orange: './images/pattern_orange.png', 
         yellow: './images/pattern_yellow.png',
         green:  './images/pattern_green.png',
         blue:   './images/pattern_blue.png',
         purple: './images/pattern_purple.png',
-        black:  './images/pattern_black.png',
-        white:  './images/pattern_white.png'
+        black:  './images/pattern_black.png',  
+        white:  './images/pattern_white.png'   
     };
 
     const colorPatternsBase = {
-        red:    './images/pattern_red.png',
-        orange: './images/pattern_orange.png',
-        yellow: './images/pattern_yellow.png',
-        green:  './images/pattern_green.png',
-        blue:   './images/pattern_blue.png',
-        purple: './images/pattern_purple.png',
-        black:  './images/pattern_black.png',
-        white:  './images/pattern_white.png'
+        red:    './images/pattern_red.png', orange: './images/pattern_orange.png', yellow: './images/pattern_yellow.png', green:  './images/pattern_green.png',
+        blue:   './images/pattern_blue.png', purple: './images/pattern_purple.png', black:  './images/pattern_black.png', white:  './images/pattern_white.png'
     };
 
     const colorPatternsLeft = {
-        red:    './images/pattern_red_L.png',
-        orange: './images/pattern_orange_L.png',
-        yellow: './images/pattern_yellow_L.png',
-        green:  './images/pattern_green_L.png',
-        blue:   './images/pattern_blue_L.png',
-        purple: './images/pattern_purple_L.png',
-        black:  './images/pattern_black_L.png',
-        white:  './images/pattern_white_L.png'
+        red: './images/pattern_red_L.png', orange: './images/pattern_orange_L.png', yellow: './images/pattern_yellow_L.png', green: './images/pattern_green_L.png',
+        blue: './images/pattern_blue_L.png', purple: './images/pattern_purple_L.png', black: './images/pattern_black_L.png', white: './images/pattern_white_L.png'
     };
 
     const colorPatternsRight = {
-        red:    './images/pattern_red_R.png',
-        orange: './images/pattern_orange_R.png',
-        yellow: './images/pattern_yellow_R.png',
-        green:  './images/pattern_green_R.png',
-        blue:   './images/pattern_blue_R.png',
-        purple: './images/pattern_purple_R.png',
-        black:  './images/pattern_black_R.png',
-        white:  './images/pattern_white_R.png'
+        red: './images/pattern_red_R.png', orange: './images/pattern_orange_R.png', yellow: './images/pattern_yellow_R.png', green: './images/pattern_green_R.png',
+        blue: './images/pattern_blue_R.png', purple: './images/pattern_purple_R.png', black: './images/pattern_black_R.png', white: './images/pattern_white_R.png'
     };
 
     function initAiCore() {
@@ -458,315 +441,182 @@
         canvasCtx = canvasElement.getContext("2d");
 
         Object.keys(colorPatternsLeft).forEach(color => {
-            const img = new Image();
-            img.src = colorPatternsLeft[color];
-            loadedImages[`${color}_L`] = img;
+            const img = new Image(); img.src = colorPatternsLeft[color]; loadedImages[`${color}_L`] = img;
         });
-
         Object.keys(colorPatternsRight).forEach(color => {
-            const img = new Image();
-            img.src = colorPatternsRight[color];
-            loadedImages[`${color}_R`] = img;
+            const img = new Image(); img.src = colorPatternsRight[color]; loadedImages[`${color}_R`] = img;
         });
-
         Object.keys(colorPatternsBase).forEach(color => {
-            const img = new Image();
-            img.src = colorPatternsBase[color];
-            loadedImages[color] = img;
+            const img = new Image(); img.src = colorPatternsBase[color]; loadedImages[color] = img;
         });
 
         const FaceMeshClass = window.FaceMesh || FaceMesh;
-        faceMesh = new FaceMeshClass({
-            locateFile: (file) => `https://unpkg.com/@mediapipe/face_mesh@0.4/${file}`
-        });
-
-        faceMesh.setOptions({
-            maxNumFaces: 1,
-            refineLandmarks: true, 
-            minDetectionConfidence: 0.5,
-            minTrackingConfidence: 0.5
-        });
-
+        faceMesh = new FaceMeshClass({ locateFile: (file) => `https://unpkg.com/@mediapipe/face_mesh@0.4/${file}` });
+        faceMesh.setOptions({ maxNumFaces: 1, refineLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
         faceMesh.onResults(onFaceResults);
+
+        // 🌟 核心分流：第一時間檢查這是不是使用者手機掃描進來的分享頁面？
+        if (checkSharedStateUrl()) return;
+
         document.getElementById("ai-loading-mask").style.display = "none";
         showQuestion();
+    }
+
+    // 🌟 核心功能一：自動辨識網址後方的 localStorage 分享代碼
+    function checkSharedStateUrl() {
+        const params = new URLSearchParams(window.location.search);
+        const shareId = params.get('share');
+        if (shareId) {
+            const savedState = localStorage.getItem(`midnight-alchemy-share-${shareId}`);
+            if (savedState) {
+                try {
+                    const state = JSON.parse(savedState);
+                    detectedColor = state.color || detectedColor;
+                    currentFinalColor = state.color || currentFinalColor;
+
+                    // 隱藏前面所有不需要的流程分頁
+                    document.getElementById("ai-loading-mask").style.display = "none";
+                    document.getElementById('quiz-page').style.display = 'none';
+                    document.getElementById('result-page').style.display = 'none';
+                    document.getElementById('character-page').style.display = 'none';
+                    
+                    // 顯示最終大面板結果頁
+                    document.getElementById('photo-result-page').style.display = 'block';
+
+                    // 🌟 關鍵優化：手機看的時候，右側控制面板和 QRcode 框通通隱藏，直接變成一張純淨的直立卡片
+                    document.getElementById('right-control-panel').style.display = 'none';
+
+                    document.getElementById('photo-result-char-img').src = characterImages[state.color];
+                    document.getElementById('photo-result-photo-img').src = state.photoDataUrl || '';
+                    document.getElementById('photo-result-photo-img').style.display = state.photoDataUrl ? 'block' : 'none';
+                    
+                    document.getElementById('photo-page-title').innerText = `核心化身：${state.charName}`;
+                    document.getElementById('photo-quote-text').innerText = state.quote;
+                    
+                    // 手機板提示文字加在最下方
+                    const hintPara = document.createElement('p');
+                    hintPara.className = 'qr-copy';
+                    hintPara.innerText = "💡 證書加載成功！長按畫面即可直接儲存這張精彩證書圖片 💾";
+                    document.getElementById('my-capture-target-box').appendChild(hintPara);
+
+                    return true; 
+                } catch (e) { console.error(e); }
+            }
+        }
+        return false;
     }
 
     function updateCameraActionButtonState(isReady, label = '拍照') {
         const cameraActionBtn = document.getElementById('camera-action-btn');
         if (!cameraActionBtn) return;
-        cameraActionBtn.disabled = !isReady;
-        cameraActionBtn.innerText = label;
+        cameraActionBtn.disabled = !isReady; cameraActionBtn.innerText = label;
     }
 
     function startTrackingAR(finalColor) {
-        currentFinalColor = finalColor;
-        currentEyeWidth = 70; 
-        hasLockedCoordinates = false; 
-        isShrinking = false;
-        shrinkStartTimestamp = 0;
-        hasCompletedSequence = false;
-        capturedPhotoDataUrl = '';
+        currentFinalColor = finalColor; currentEyeWidth = 70; hasLockedCoordinates = false; 
+        isShrinking = false; shrinkStartTimestamp = 0; hasCompletedSequence = false; capturedPhotoDataUrl = '';
         updateCameraActionButtonState(false, '黑眼圈IP生成中...');
         
-        const now = performance.now();
-        lastTimestamp = now; 
-        startTime = now; 
-
-        if (animationFrameId) {
-            cancelAnimationFrame(animationFrameId);
-        }
+        const now = performance.now(); lastTimestamp = now; startTime = now; 
+        if (animationFrameId) cancelAnimationFrame(animationFrameId);
 
         ensureResultEyeImages();
         const lImg = document.getElementById('left-eye-img');
         const rImg = document.getElementById('right-eye-img');
-        lImg.src = colorPatternsLeft[finalColor];
-        rImg.src = colorPatternsRight[finalColor];
-        lImg.style.width = '70px';
-        rImg.style.width = '70px';
-        lImg.style.opacity = '0';
-        rImg.style.opacity = '0';
-        lImg.style.display = 'none';
-        rImg.style.display = 'none';
+        lImg.src = colorPatternsLeft[finalColor]; rImg.src = colorPatternsRight[finalColor];
+        lImg.style.width = '70px'; rImg.style.width = '70px';
+        lImg.style.opacity = '0'; rImg.style.opacity = '0';
+        lImg.style.display = 'none'; rImg.style.display = 'none';
 
         document.getElementById("tracking-container").style.display = "block";
 
         if (!camera) {
             const CameraClass = window.Camera || Camera;
             camera = new CameraClass(videoElement, {
-                onFrame: async () => {
-                    await faceMesh.send({ image: videoElement });
-                },
-                width: 640,
-                height: 480
+                onFrame: async () => { await faceMesh.send({ image: videoElement }); },
+                width: 640, height: 480
             });
-            camera.start().catch(err => {
-                alert("鏡頭啟動失敗：" + err);
-            });
+            camera.start().catch(err => { alert("鏡頭啟動失敗：" + err); });
         }
-
         animateImageGrowth(performance.now());
     }
 
     function animateImageGrowth(currentTimestamp) {
         const deltaTime = (currentTimestamp - lastTimestamp) / 1000;
         lastTimestamp = currentTimestamp;
-
         const timeElapsed = currentTimestamp - startTime;
-
         const lImg = document.getElementById('left-eye-img');
         const rImg = document.getElementById('right-eye-img');
         if (!lImg || !rImg) return;
 
-        const fadeDuration = 2500;
-        const pauseDuration = 2000;
-        const shrinkDuration = 1200;
-        const initialWaitDuration = 1500;
+        const fadeDuration = 2500; const pauseDuration = 2000; const shrinkDuration = 1200; const initialWaitDuration = 1500;
 
         if (timeElapsed >= initialWaitDuration && hasLockedCoordinates) {
-            lImg.style.display = 'block';
-            rImg.style.display = 'block';
-
+            lImg.style.display = 'block'; rImg.style.display = 'block';
             const fadeElapsed = timeElapsed - initialWaitDuration;
             const fadeProgress = Math.min(fadeElapsed / fadeDuration, 1);
 
             if (fadeProgress < 1) {
-                lImg.style.opacity = String(fadeProgress);
-                rImg.style.opacity = String(fadeProgress);
-                currentEyeWidth = 70;
+                lImg.style.opacity = String(fadeProgress); rImg.style.opacity = String(fadeProgress); currentEyeWidth = 70;
             } else if (fadeElapsed < fadeDuration + pauseDuration) {
-                lImg.style.opacity = '1';
-                rImg.style.opacity = '1';
-                currentEyeWidth = 70;
+                lImg.style.opacity = '1'; rImg.style.opacity = '1'; currentEyeWidth = 70;
             } else if (hasCompletedSequence) {
-                lImg.style.opacity = '1';
-                rImg.style.opacity = '1';
-                currentEyeWidth = 70;
+                lImg.style.opacity = '1'; rImg.style.opacity = '1'; currentEyeWidth = 70;
                 updateCameraActionButtonState(true, '拍照');
             } else if (isShrinking) {
-                lImg.style.opacity = '1';
-                rImg.style.opacity = '1';
-
+                lImg.style.opacity = '1'; rImg.style.opacity = '1';
                 const shrinkProgress = Math.min((currentTimestamp - shrinkStartTimestamp) / shrinkDuration, 1);
                 currentEyeWidth = maxEyeWidth - (maxEyeWidth - 70) * shrinkProgress;
-
                 if (shrinkProgress >= 1) {
-                    currentEyeWidth = 70;
-                    isShrinking = false;
-                    hasCompletedSequence = true;
-                    lImg.src = colorPatternsBase[currentFinalColor];
-                    rImg.src = colorPatternsBase[currentFinalColor];
+                    currentEyeWidth = 70; isShrinking = false; hasCompletedSequence = true;
+                    lImg.src = colorPatternsBase[currentFinalColor]; rImg.src = colorPatternsBase[currentFinalColor];
                     updateCameraActionButtonState(true, '拍照');
                 }
             } else {
-                lImg.style.opacity = '1';
-                rImg.style.opacity = '1';
-
+                lImg.style.opacity = '1'; rImg.style.opacity = '1';
                 const growProgress = Math.min((currentTimestamp - (startTime + initialWaitDuration + fadeDuration + pauseDuration)) / shrinkDuration, 1);
                 currentEyeWidth = 70 + (maxEyeWidth - 70) * growProgress;
-
                 if (growProgress >= 1) {
                     currentEyeWidth = maxEyeWidth;
-                    lImg.src = colorPatternsLeft[currentFinalColor];
-                    rImg.src = colorPatternsRight[currentFinalColor];
-                    isShrinking = true;
-                    shrinkStartTimestamp = currentTimestamp;
+                    lImg.src = colorPatternsLeft[currentFinalColor]; rImg.src = colorPatternsRight[currentFinalColor];
+                    isShrinking = true; shrinkStartTimestamp = currentTimestamp;
                 }
             }
         } else {
-            currentEyeWidth = 70;
-            lImg.style.display = 'none';
-            rImg.style.display = 'none';
+            currentEyeWidth = 70; lImg.style.display = 'none'; rImg.style.display = 'none';
         }
 
-        lImg.style.width = currentEyeWidth + 'px';
-        rImg.style.width = currentEyeWidth + 'px';
-        
+        lImg.style.width = currentEyeWidth + 'px'; rImg.style.width = currentEyeWidth + 'px';
         if (hasLockedCoordinates) {
             const inwardShift = Math.min(currentEyeWidth * -0.5, 100);
-            lImg.style.left = eyePositions.lx + inwardShift + 'px';
-            lImg.style.top = eyePositions.ly + 'px';
-            rImg.style.left = eyePositions.rx - inwardShift + 'px';
-            rImg.style.top = eyePositions.ry + 'px';
+            lImg.style.left = eyePositions.lx + inwardShift + 'px'; lImg.style.top = eyePositions.ly + 'px';
+            rImg.style.left = eyePositions.rx - inwardShift + 'px'; rImg.style.top = eyePositions.ry + 'px';
         }
-
         animationFrameId = requestAnimationFrame(animateImageGrowth);
     }
 
     function onFaceResults(results) {
-        canvasCtx.save();
-        canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-        canvasCtx.translate(canvasElement.width, 0);
-        canvasCtx.scale(-1, 1);
+        canvasCtx.save(); canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+        canvasCtx.translate(canvasElement.width, 0); canvasCtx.scale(-1, 1);
         canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
-        
         if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
-            const landmarks = results.multiFaceLandmarks[0];
-            const rect = canvasElement.getBoundingClientRect();
-
-            eyePositions.lx = rect.left + (1 - landmarks[111].x) * rect.width; 
-            eyePositions.ly = rect.top + landmarks[111].y * rect.height;
-            eyePositions.rx = rect.left + (1 - landmarks[340].x) * rect.width;
-            eyePositions.ry = rect.top + landmarks[340].y * rect.height;
-
+            const landmarks = results.multiFaceLandmarks[0]; const rect = canvasElement.getBoundingClientRect();
+            eyePositions.lx = rect.left + (1 - landmarks[111].x) * rect.width; eyePositions.ly = rect.top + landmarks[111].y * rect.height;
+            eyePositions.rx = rect.left + (1 - landmarks[340].x) * rect.width; eyePositions.ry = rect.top + landmarks[340].y * rect.height;
             hasLockedCoordinates = true; 
         }
         canvasCtx.restore();
-    }
-
-    // --- 心理問答題目數據 ---
-    let scoreHistory = []; let totalScore = 0; let currentIdx = 0;
-    const questions = [
-        { q: "1. 鬧鐘響起的那一刻,你通常第一個冒出的念頭是?", a: ["完蛋,今天有一堆事要做...", "再讓我逃避世界5分鐘...", "毫無感覺,像機器人一樣起床。", "又是新的一天,雖然累但出發吧!"], scores: [8, 6, 4, 2] },
-        { q: "2. 在捷運或公車上,你的眼睛和手通常在做什麼?", a: ["瘋狂刷社群、回訊息,深怕漏掉任何資訊。", "盯著窗外放空,進入自己的小宇宙。", "閉目養神,但腦袋其實還在轉。", "觀察身邊的乘客,或看書、聽音樂。"], scores: [8, 6, 4, 2] },
-        { q: "3. 如果你的工作/課業壓力是一頂帽子,你覺得現在這頂帽子?", a: ["重到快把我的頸椎壓斷了。", "有點大頂,遮住了我前方的視線,讓我有點迷惘。", "顏色太鮮豔了,周圍的人一直在盯著看,讓我好焦慮。", "還算合身,只是戴久了有點悶。"], scores: [8, 6, 4, 2] },
-        { q: "4. 當你遇到意見不合的豬隊友時,你內心的第一直覺是?", a: ["火火火!好想直接拍桌大吵一架!", "算了,心好累,你說什麼都對(內心開始擺爛)。", "表面微笑說好,私底下瘋狂跟朋友寫小作文抱怨。", "試圖冷靜分析,找出兩全其美的解決辦法。"], scores: [8, 6, 4, 2] },
-        { q: "5. 連續熬夜幾天後,你照鏡子看著自己的黑眼圈,你覺得它像什麼?", a: ["像被揍了一拳,充滿戰鬥過的痕跡。", "像暈開的煙燻妝,有一種頹廢的美感。", "像發霉的年糕,看著就讓人焦慮。", "像一塊擦不掉的污漬,乾脆假裝沒看到。"], scores: [8, 6, 4, 2] },
-        { q: "6. 午餐時間到了,面對琳瑯滿目的選擇,你通常怎麼決定?", a: ["選擇障礙大爆發,看評論看很久還是決定不了。", "點最刺激的!麻辣鍋、炸雞,垃圾食物才能續命!", "跟著別人點,或者吃跟昨天一模一樣的,懶得思考。", "挑相對健康的健康便當,試圖挽救一下身體。"], scores: [8, 6, 4, 2] },
-        { q: "7. 深夜躺在床上準備睡覺時,你的大腦通常在播放什麼?", a: ["開始回顧今天講錯的話,或是五年前的尷尬往事。", "對明天的未知感到焦慮,翻來覆去睡不著。", "腦袋像一片虛無,但就是想繼續滑手機不想睡。", "播放一些輕音樂或白噪音,試圖讓自己平靜。"], scores: [8, 6, 4, 2] },
-        { q: "8. 如果可以用一種聲音來形容你這週的心理狀態,那會是?", a: ["救護車的警報聲(嗶啵嗶啵),非常緊繃。", "除濕機的低頻運轉聲(嗡嗡嗡),沉悶又除不乾淨。", "貓咪的呼嚕聲或下雨聲,平靜但帶有一點疲憊。", "遊樂園的背景雜音,很熱鬧但聽久了頭很暈.。"], scores: [8, 6, 4, 2] },
-        { q: "9. 朋友突然臨時取消了週末的聚會,你當下的真實感受是?", a: ["太棒了!可以理直氣壯在家躺平,內心一陣狂喜。", "有點失落和寂寂,是不是自己哪裡做不好?", "突然空下來很慌,立刻開始找別人或排滿其他行程。", "沒關係,那就順其自然調整計畫吧。"], scores: [8, 6, 4, 2] }
-    ];
-
-    const question10 = {
-        q: "10. 現在,前面有一面可以宣洩所有疲憊的「黑眼圈回收牆」,你最想把哪一種「心聲」丟進去回收?",
-        a: ["爆表的怒氣與暴躁", "無處安放的社群焦慮", "無法克制的拖延症", "對未來的迷茫與多愁善感", "被迫營業的假面微笑", "身體與心靈的過度劳累", "日復一日的乏味與麻木", "試圖討好所有人的緊繃感"],
-        scores: [8, 6, 4, 2, 8, 6, 4, 2]
-    };
-
-    function showQuestion() {
-        const optionsContainer = document.getElementById('options-container');
-        if (!optionsContainer) return; 
-        optionsContainer.innerHTML = '';
-        const navBtn = document.getElementById('back-nav-btn');
-
-        if (currentIdx === 0) { navBtn.innerText = "← 返回封面"; } 
-        else { navBtn.innerText = "← 回到上一題"; }
-
-        if (currentIdx < questions.length) {
-            document.getElementById('progress-text').innerText = `PHASE 2: 負能量提煉中 | 問題 ${currentIdx + 1} / 10`;
-            const currentQ = questions[currentIdx];
-            document.getElementById('question-text').innerText = currentQ.q;
-
-            currentQ.a.forEach((option, i) => {
-                const btn = document.createElement('button');
-                btn.className = 'btn';
-                btn.innerText = option;
-                btn.onclick = () => {
-                    scoreHistory.push(currentQ.scores[i]);
-                    totalScore += currentQ.scores[i];
-                    currentIdx++;
-                    showQuestion();
-                };
-                optionsContainer.appendChild(btn);
-            });
-        } 
-        else if (currentIdx === questions.length) {
-            document.getElementById('progress-text').innerText = `PHASE 3: 負負得正臨界點 | 最終題`;
-            document.getElementById('question-text').innerText = question10.q;
-
-            question10.a.forEach((option, i) => {
-                const btn = document.createElement('button');
-                btn.className = 'btn';
-                btn.innerText = option;
-                btn.onclick = () => {
-                    scoreHistory.push(question10.scores[i]);
-                    totalScore += question10.scores[i];
-                    currentIdx++;
-                    showResult();
-                };
-                optionsContainer.appendChild(btn);
-            });
-        }
-    }
-
-    function handleBackNavigation() {
-        if (currentIdx === 0) {
-            window.location.href = "./cover.html";
-        } else {
-            currentIdx--;
-            const lastAddedScore = scoreHistory.pop();
-            totalScore -= lastAddedScore;
-            showQuestion();
-        }
-    }
-
-    function showResult() {
-        document.getElementById('quiz-page').style.display = 'none';
-        document.getElementById('result-page').style.display = 'block';
-
-        let color = "white"; let charName = ""; let quote = "";
-
-        if (totalScore >= 71) { color = "red"; charName = "大同電鍋"; quote = "「心裡一把火,飯都熟了。今天誰敢惹我,我就送他去『大同』世界。」"; }
-        else if (totalScore >= 62) { color = "yellow"; charName = "垃圾車"; quote = "「大腦塞滿垃圾資訊,逼逼逼!好想把自己跟著垃圾車一起載走...」"; }
-        else if (totalScore >= 53) { color = "blue"; charName = "藍白拖"; quote = "「今天真的是Monday Blue,真的什麼事都想『拖』啊『拖』...」"; }
-        else if (totalScore >= 44) { color = "green"; charName = "茄紙袋"; quote = "「凡事追求和平、green(原諒)對方...再壓抑下去,我遲早變綠色郵筒被塞爆。」"; }
-        else if (totalScore >= 35) { color = "purple"; charName = "九份芋頭"; quote = "「生活就像夜市的芋圓,看起來Q彈,心裡其實全是一顆顆沉重的『內耗』,真讓人『芋』哭無淚。」"; }
-        else if (totalScore >= 26) { color = "orange"; charName = "中秋月餅/蛋黃酥"; quote = "「天天被迫營業、面帶微笑。我的心早就跟月餅裡的蛋黃一樣,被生活給烤乾了。」"; }
-        else if (totalScore >= 20) { color = "black"; charName = "夜市豬血糕"; quote = "「靈魂已經被生活揉躪得像豬血糕一樣。別跟我談夢想,老子現在只想『躺平』。」"; }
-        else { color = "white"; charName = "小籠包/包子/肉圓"; quote = "「四大皆空,徹底麻木。老子的熱情已經被生活給『蒸』發了,現在只想當個薪水小偷。」"; }
-
-        detectedColor = color; 
-        document.getElementById('char-name').innerText = charName;
-        document.getElementById('quote-text').innerText = quote;
-
-        startTrackingAR(color);
     }
 
     function captureCurrentFrame() {
         if (!canvasElement) return '';
         try {
             const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = canvasElement.width;
-            tempCanvas.height = canvasElement.height;
+            tempCanvas.width = canvasElement.width; tempCanvas.height = canvasElement.height;
             const tempCtx = tempCanvas.getContext('2d');
             tempCtx.drawImage(canvasElement, 0, 0, tempCanvas.width, tempCanvas.height);
-
             return tempCanvas.toDataURL('image/png');
-        } catch (error) {
-            console.error('拍照失敗：', error);
-            return '';
-        }
+        } catch (error) { console.error('拍照失敗：', error); return ''; }
     }
 
     function showPreviewPage() {
@@ -779,21 +629,13 @@
     function showCharacterPage() {
         document.getElementById('preview-page').style.display = 'none';
         document.getElementById('character-page').style.display = 'block';
-
         const charImgElement = document.getElementById('final-char-img');
-        const resultImage = characterImages[detectedColor];
-        if (charImgElement) { charImgElement.src = resultImage; }
+        if (charImgElement) { charImgElement.src = characterImages[detectedColor]; }
 
         const originalCharName = document.getElementById('char-name').innerText;
         const originalQuote = document.getElementById('quote-text').innerText;
-
         document.getElementById('char-page-title').innerText = `核心化身：${originalCharName}`;
         document.getElementById('quote-text-final').innerText = originalQuote;
-
-        // 🌟 搶先將隱形拍照區塊的內容寫好
-        document.getElementById('card-render-title').innerText = `核心化身：${originalCharName}`;
-        document.getElementById('card-render-img').src = resultImage;
-        document.getElementById('card-render-quote').innerText = originalQuote;
     }
 
     function persistCurrentResultState() {
@@ -814,48 +656,8 @@
         if (!container) return;
         container.innerHTML = '';
         qrCodeInstance = new QRCode(container, {
-            text,
-            width: 156,
-            height: 156,
-            colorDark: '#000000',
-            colorLight: '#ffffff',
-            correctLevel: QRCode.CorrectLevel.M
+            text, width: 156, height: 156, colorDark: '#000000', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M
         });
-    }
-
-    // 🌟 核心修正：點擊「儲存結果」時，精準拍攝背景隱形的乾淨小卡片，絕不穿幫！
-    async function saveCurrentResult() {
-        if (!window.html2canvas) {
-            alert('html2canvas 未載入');
-            return;
-        }
-
-        // 拍攝隱藏在後台的完美卡片區塊
-        const target = document.getElementById('my-clean-certificate-card');
-        
-        html2canvas(target, {
-            backgroundColor: '#141414',
-            scale: 2, // 拉高解析度確保存下來的證書極度精緻清晰
-            useCORS: true,
-            logging: false
-        }).then(canvas => {
-            const imageDataUrl = canvas.toDataURL('image/jpeg', 0.9);
-            
-            // 觸發電腦瀏覽器實體下載
-            const link = document.createElement('a');
-            link.href = imageDataUrl;
-            link.download = `負能量回收證書_${detectedColor}.jpg`;
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-        }).catch(err => {
-            console.error('導出純淨圖片失敗：', err);
-        });
-
-        // 拍完照後，自動順暢切換到最終的 QR 碼狀態面板頁面
-        if (document.getElementById('photo-result-page').style.display !== 'block') {
-            goToPhotoResultPage();
-        }
     }
 
     function goToPhotoResultPage() {
@@ -864,9 +666,7 @@
 
         const charImgElement = document.getElementById('photo-result-char-img');
         const photoImgElement = document.getElementById('photo-result-photo-img');
-        const resultImage = characterImages[detectedColor];
-
-        if (charImgElement) { charImgElement.src = resultImage; }
+        if (charImgElement) { charImgElement.src = characterImages[detectedColor]; }
         if (photoImgElement) {
             photoImgElement.src = capturedPhotoDataUrl || '';
             photoImgElement.style.display = capturedPhotoDataUrl ? 'block' : 'none';
@@ -874,58 +674,66 @@
 
         const originalCharName = document.getElementById('char-name').innerText;
         const originalQuote = document.getElementById('quote-text').innerText;
-
         document.getElementById('photo-page-title').innerText = `核心化身：${originalCharName}`;
         document.getElementById('photo-quote-text').innerText = originalQuote;
         
-        // 刷新 QRcode 網址分享狀態
+        // 🌟 核心功能二：當跳轉到最後一頁時，自動用純文字生成超大顆、秒解秒掃的專屬分享網址
         try {
             const shareId = persistCurrentResultState();
             const baseUrl = window.location.href.split(/[?#]/)[0];
             const shareUrl = `${baseUrl}?share=${encodeURIComponent(shareId)}`;
-            renderQrCode(shareUrl);
+            renderQrCode(shareUrl); // 丟給條碼產生器，格子非常大、絕不卡死
         } catch (e) {
             renderQrCode(window.location.href);
         }
     }
 
-    function applySharedState(state) {
-        if (!state) return;
-        detectedColor = state.color || detectedColor;
-        currentFinalColor = state.color || currentFinalColor;
-
-        document.getElementById('char-name').innerText = state.charName || '未知角色';
-        document.getElementById('quote-text').innerText = state.quote || '';
-        capturedPhotoDataUrl = state.photoDataUrl || '';
+    function saveCurrentResult() {
         goToPhotoResultPage();
     }
 
+    // 🌟 核心功能三：當使用者在電腦端點選黃色按鈕時，精準對準左欄卡片進行高解析度拍照下載！
+    function triggerPcCanvasDownload() {
+        if (!window.html2canvas) { alert('html2canvas 未載入'); return; }
+        
+        // 精準鎖定左側包含：大標題、角色圖、使用者照片、底部台詞的整張實體黑框卡片！
+        const targetBox = document.getElementById('my-capture-target-box');
+        
+        html2canvas(targetBox, {
+            backgroundColor: '#141414',
+            scale: 2, // 拉高 2 倍率，確保存進電腦下載夾的證書圖片極度清晰
+            useCORS: true,
+            logging: false
+        }).then(canvas => {
+            const imageDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+            const link = document.createElement('a');
+            link.href = imageDataUrl;
+            link.download = `負能量回收證書_${detectedColor}.jpg`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        }).catch(err => { console.error('導出圖片失敗：', err); });
+    }
+
     function ensureResultEyeImages() {
-        const resultPage = document.getElementById('result-page');
-        if (!resultPage) return;
+        const resultPage = document.getElementById('result-page'); if (!resultPage) return;
         if (!document.getElementById('left-eye-img')) {
-            const img = document.createElement('img'); img.id = 'left-eye-img'; img.className = 'eye-grow-img'; img.alt = '左眼貼圖';
-            resultPage.appendChild(img);
+            const img = document.createElement('img'); img.id = 'left-eye-img'; img.className = 'eye-grow-img'; img.alt = '左眼貼圖'; resultPage.appendChild(img);
         }
         if (!document.getElementById('right-eye-img')) {
-            const img = document.createElement('img'); img.id = 'right-eye-img'; img.className = 'eye-grow-img'; img.alt = '右眼貼圖';
-            resultPage.appendChild(img);
+            const img = document.createElement('img'); img.id = 'right-eye-img'; img.className = 'eye-grow-img'; img.alt = '右眼貼圖'; resultPage.appendChild(img);
         }
     }
 
     function restoreReadyToCaptureState() {
         ensureResultEyeImages();
-        const lImg = document.getElementById('left-eye-img');
-        const rImg = document.getElementById('right-eye-img');
-        lImg.src = colorPatternsBase[currentFinalColor];
-        rImg.src = colorPatternsBase[currentFinalColor];
-        lImg.style.display = 'block'; rImg.style.display = 'block';
-        lImg.style.opacity = '1'; rImg.style.opacity = '1';
+        const lImg = document.getElementById('left-eye-img'); const rImg = document.getElementById('right-eye-img');
+        lImg.src = colorPatternsBase[currentFinalColor]; rImg.src = colorPatternsBase[currentFinalColor];
+        lImg.style.display = 'block'; rImg.style.display = 'block'; lImg.style.opacity = '1'; rImg.style.opacity = '1';
         currentEyeWidth = 70; lImg.style.width = '70px'; rImg.style.width = '70px';
 
         isShrinking = false; shrinkStartTimestamp = 0; hasCompletedSequence = true;
-        startTime = performance.now() - 7000;
-        lastTimestamp = performance.now();
+        startTime = performance.now() - 7000; lastTimestamp = performance.now();
 
         if (animationFrameId) { cancelAnimationFrame(animationFrameId); animationFrameId = null; }
         animationFrameId = requestAnimationFrame(animateImageGrowth);
@@ -934,14 +742,12 @@
     function retakePhoto() {
         document.getElementById('preview-page').style.display = 'none';
         document.getElementById('result-page').style.display = 'block';
-        capturedPhotoDataUrl = '';
-        updateCameraActionButtonState(true, '拍照');
+        capturedPhotoDataUrl = ''; updateCameraActionButtonState(true, '拍照');
 
         if (!camera) {
             const CameraClass = window.Camera || Camera;
             camera = new CameraClass(videoElement, {
-                onFrame: async () => { await faceMesh.send({ image: videoElement }); },
-                width: 640, height: 480
+                onFrame: async () => { await faceMesh.send({ image: videoElement }); }, width: 640, height: 480
             });
         }
         try { camera.start(); } catch (e) { console.error(e); }
@@ -956,17 +762,12 @@
         if (camera) { try { camera.stop(); } catch(e) {} }
         if (animationFrameId) { cancelAnimationFrame(animationFrameId); animationFrameId = null; }
 
-        const lImg = document.getElementById('left-eye-img');
-        const rImg = document.getElementById('right-eye-img');
-        if (lImg) lImg.remove();
-        if (rImg) rImg.remove();
-
+        const lImg = document.getElementById('left-eye-img'); const rImg = document.getElementById('right-eye-img');
+        if (lImg) lImg.remove(); if (rImg) rImg.remove();
         showPreviewPage();
     }
 
-    function goToCharacterPage() {
-        showCharacterPage();
-    }
+    function goToCharacterPage() { showCharacterPage(); }
 
     function resetQuizToCover() {
         totalScore = 0; currentIdx = 0; scoreHistory = [];
@@ -976,17 +777,7 @@
         window.location.href = "./cover.html";
     }
 
-    window.addEventListener("DOMContentLoaded", () => {
-        initAiCore();
-        const params = new URLSearchParams(window.location.search);
-        const shareId = params.get('share');
-        if (shareId) {
-            const savedState = localStorage.getItem(`midnight-alchemy-share-${shareId}`);
-            if (savedState) {
-                try { applySharedState(JSON.parse(savedState)); } catch (e) { console.error(e); }
-            }
-        }
-    });
+    window.addEventListener("DOMContentLoaded", () => { initAiCore(); });
 </script>
 </body>
 </html>
