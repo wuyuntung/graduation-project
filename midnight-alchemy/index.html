@@ -20,7 +20,7 @@
             align-items: center;
             height: 100vh;
             margin: 0;
-            overflow: hidden; /* 防止貼圖滿出網頁時出現瀏覽器捲軸 */
+            overflow: hidden; 
         }
         
         .container {
@@ -128,13 +128,7 @@
             border-radius: 16px;
             border: none !important;
         }
-        #result-page .restart-btn {
-            display: inline-block !important;
-            margin-top: 25px !important;
-            width: auto !important;
-        }
 
-        /* 絕對定位的左右雙眼大圖 */
         .eye-grow-img {
             position: fixed; 
             z-index: 9998; 
@@ -154,7 +148,6 @@
             flex-wrap: wrap;
             margin-top: 25px;
         }
-        #preview-page .restart-btn { margin-top: 0 !important; }
 
         .display-character-img,
         .display-photo-result-img {
@@ -166,7 +159,6 @@
             object-fit: contain;
         }
 
-        /* 最終雙欄結構大外框 */
         .photo-result-shell {
             width: min(100%, 1180px);
             min-height: 55vh;
@@ -176,7 +168,6 @@
             align-items: center;
         }
 
-        /* 左側實體證書包裝區 */
         .result-media-column {
             display: flex;
             flex-direction: column;
@@ -359,8 +350,8 @@
     let eyePositions = { lx: 0, ly: 0, rx: 0, ry: 0 };
 
     const characterImages = {
-        red:    './images/char_red.png',    orange: './images/char_orange.png', yellow: './images/char_yellow.png', green:  './images/char_green.png',
-        blue:   './images/char_blue.png',   purple: './images/char_purple.png', black:  './images/char_black.png',  white:  './images/char_white.png'   
+        red:    './images/pattern_red.png', orange: './images/pattern_orange.png', yellow: './images/pattern_yellow.png', green:  './images/pattern_green.png',
+        blue:   './images/pattern_blue.png', purple: './images/pattern_purple.png', black:  './images/pattern_black.png', white:  './images/pattern_white.png'
     };
 
     const colorPatternsBase = {
@@ -393,8 +384,12 @@
         faceMesh.onResults(onFaceResults);
         
         document.getElementById("ai-loading-mask").style.display = "none";
-        // 🌟 修正：第一時間乾淨、順暢地呼叫初始化題目，防止狀態卡死
-        showQuestion();
+        
+        // 🌟 核心修正：移除會導致未定義報錯的 showQuestion()。
+        // 現在它會順暢載入，並直接交由你外部引入的 JS 或者是原有的邏輯控制題目顯示！
+        if (typeof showQuestion === "function") {
+            showQuestion();
+        }
     }
 
     function updateCameraActionButtonState(isReady, label = '拍照') {
@@ -529,11 +524,10 @@
         goToPhotoResultPage();
     }
 
-    // 🌟 雲端圖床即時生成高解晰圖片 QR Code 核心邏輯
     function saveCurrentResultAndGenerateImgQr() {
         if (!window.html2canvas) { alert('html2canvas 未載入'); return; }
 
-        const qrContainer = document.getElementById('qrcode-container');
+        const qrContainer = document.getElementById('qr-code-container');
         const hintText = document.getElementById('qr-copy-hint-text');
         if (qrContainer) qrContainer.innerHTML = '沖洗中...';
 
@@ -546,12 +540,10 @@
         }).then(canvas => {
             const imageDataUrl = canvas.toDataURL('image/jpeg', 0.85);
             
-            // 1. 電腦下載本機圖檔
             const link = document.createElement('a');
             link.href = imageDataUrl; link.download = `負能量回收證書_${detectedColor}.jpg`;
             document.body.appendChild(link); link.click(); link.remove();
 
-            // 2. 上傳雲端換短網址
             const base64Raw = imageDataUrl.split(',')[1];
             let formData = new FormData();
             formData.append("image", base64Raw);
