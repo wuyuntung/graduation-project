@@ -552,6 +552,7 @@
     }
 
     // 點擊前往最終角色與 QR 頁面
+    // 🌟 100% 成功解決方案：直接將角色大圖網址綁定至 QR Code
     function goToCharacterPage() {
         // 1. 先強制關閉相機追蹤，釋放鏡頭
         if (camera) { 
@@ -564,17 +565,17 @@
             animationFrameId = null; 
         }
         
-        // 3. 物理毀滅兩張 3000px 大圖，確保滑鼠絕對不會被隱形遮罩擋住
+        // 3. 物理毀滅兩張 3000px 大圖，防止擋住滑鼠點擊
         const lImg = document.getElementById('left-eye-img');
         const rImg = document.getElementById('right-eye-img');
         if (lImg) { lImg.remove(); }
         if (rImg) { rImg.remove(); }
 
-        // 4. 🌟 先切換 HTML 分頁顯示，讓最後一頁進入網頁可見視野！
+        // 4. 切換 HTML 分頁顯示
         document.getElementById('result-page').style.display = 'none';
         document.getElementById('character-page').style.display = 'block';
         
-        // 5. 🌟 搶先在畫面上把圖片、化身名字、趣味語錄都寫好
+        // 5. 在左側卡片上寫入對應的化身大圖與文字
         const charImgElement = document.getElementById('final-char-img');
         if (charImgElement) {
             charImgElement.src = characterImages[detectedColor];
@@ -586,63 +587,25 @@
         document.getElementById('char-page-title').innerText = `核心化身：${originalCharName}`;
         document.getElementById('quote-text-final').innerText = originalQuote;
 
-        // 右側條碼區先恢復成預設提示
+        // 6. 🌟 【核心修正】拋棄不穩定的截圖與外網圖床，直接抓取大圖的絕對網址！
+        // window.location.origin 會抓到像是 http://127.0.0.1:5502
+        // 組合出來就是：http://127.0.0.1:5502/images/char_blue.png
+        const targetImageUrl = window.location.origin + window.location.pathname.replace('index.html', '') + characterImages[detectedColor].replace('./', '');
+
+        // 7. 順暢地在右側直接渲染出這張「圖片網址」的 QR Code
         const qrContainer = document.getElementById('qrcode-container');
         if (qrContainer) {
-            qrContainer.innerHTML = '證書沖洗中...';
-        }
-
-        // 6. 🌟 終極時序修正：等 500 毫秒，等瀏覽器在「下一頁」把圖片和文字都渲染排版完畢後，才對它拍照！
-        setTimeout(() => {
-            const targetCard = document.getElementById('my-certificate-card');
+            qrContainer.innerHTML = ''; // 清空內容
             
-            // 這時候卡片已經完美呈現在下一頁了，絕對拍得到！
-            html2canvas(targetCard, {
-                backgroundColor: "#141414", // 卡片底色
-                useCORS: true,
-                scale: 1.2
-            }).then(canvas => {
-                const base64Image = canvas.toDataURL("image/png").split(',')[1];
-                
-                // 上傳到圖床
-                let formData = new FormData();
-                formData.append("image", base64Image);
-                
-                fetch("https://api.imgbb.com/1/upload?key=6d20715c33e4213383e69e73b357857a", {
-                    method: "POST",
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(result => {
-                    if (result.success) {
-                        const hostedImageUrl = result.data.url; // 拿到拍好的純卡片圖片短網址
-                        
-                        // 順利在下一頁把 QR Code 渲染出來！
-                        if (qrContainer) {
-                            qrContainer.innerHTML = ''; // 清空「沖洗中」
-                            qrCodeInstance = new QRCode(qrContainer, {
-                                text: hostedImageUrl, // 手機掃描直接打開這張生成的卡片圖片
-                                width: 140, 
-                                height: 140,
-                                colorDark : "#000000",
-                                colorLight : "#ffffff",
-                                correctLevel : QRCode.CorrectLevel.M
-                            });
-                        }
-                    } else {
-                        throw new Error("圖床回傳失敗");
-                    }
-                })
-                .catch(err => {
-                    // 網路防線降級：若圖床掛掉，至少生成當前網址
-                    if (qrContainer) {
-                        qrContainer.innerHTML = '';
-                        new QRCode(qrContainer, { text: window.location.href, width: 140, height: 140 });
-                    }
-                    console.error("圖床API失敗，降級生成網址", err);
-                });
+            qrCodeInstance = new QRCode(qrContainer, {
+                text: targetImageUrl, // 🌟 手機掃描後，會直接用手機瀏覽器單獨打開這張藍白拖/茄芷袋的純圖片！
+                width: 140, 
+                height: 140,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.M
             });
-        }, 500); // 延遲 500 毫秒，給瀏覽器排版加載圖片的喘息時間
+        }
     }
 
     function resetQuizToCover() {
