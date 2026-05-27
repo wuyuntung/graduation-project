@@ -176,13 +176,13 @@
             align-items: center;
         }
 
-        /* 🌟 左側實體證書包裝區（點擊儲存結果時，我們就只拍這一整塊！） */
+        /* 左側實體證書包裝區 */
         .result-media-column {
             display: flex;
             flex-direction: column;
             gap: 14px;
             justify-content: center;
-            background-color: #141414; /* 保持拍照底色黑亮一致 */
+            background-color: #141414; 
             padding: 20px;
             border-radius: 24px;
             border: 1px solid #222;
@@ -233,6 +233,11 @@
             font-size: 13px;
             font-weight: bold;
         }
+        .qrcode-box canvas, .qrcode-box img {
+            width: 132px !important;
+            height: 132px !important;
+            display: block;
+        }
         .qr-copy {
             color: #aaa;
             font-size: 14px;
@@ -254,13 +259,6 @@
             background: #141414; z-index: 1000; 
             display: flex; justify-content: center; align-items: center; 
             border-radius: 24px; flex-direction: column;
-        }
-
-        @media (max-width: 900px) {
-            .photo-result-shell { grid-template-columns: 1fr; }
-            .result-media-card img { max-height: none; }
-            .result-actions, .qr-section { justify-content: center; align-items: center; }
-            #photo-page-title, #photo-quote-text, .qr-copy { text-align: center; }
         }
     </style>
 </head>
@@ -334,7 +332,7 @@
             
             <div class="result-info-column">
                 <div class="qr-section">
-                    <div id="qr-code-container">點擊儲存<br>生成條碼</div>
+                    <div id="qr-code-container" class="qrcode-box">點擊儲存<br>生成條碼</div>
                     <p class="qr-copy" id="qr-copy-hint-text">點擊下方「儲存結果」按鈕，電腦將下載證書圖片，並同步將圖片轉為 QR Code 供手機掃描帶走！</p>
                 </div>
                 <div class="result-actions">
@@ -381,7 +379,10 @@
     };
 
     function initAiCore() {
-        videoElement = document.getElementById("webcam"); canvasElement = document.getElementById("output_canvas"); canvasCtx = canvasElement.getContext("2d");
+        videoElement = document.getElementById("webcam"); 
+        canvasElement = document.getElementById("output_canvas"); 
+        canvasCtx = canvasElement.getContext("2d");
+        
         Object.keys(colorPatternsLeft).forEach(color => { const img = new Image(); img.src = colorPatternsLeft[color]; loadedImages[`${color}_L`] = img; });
         Object.keys(colorPatternsRight).forEach(color => { const img = new Image(); img.src = colorPatternsRight[color]; loadedImages[`${color}_R`] = img; });
         Object.keys(colorPatternsBase).forEach(color => { const img = new Image(); img.src = colorPatternsBase[color]; loadedImages[color] = img; });
@@ -390,7 +391,9 @@
         faceMesh = new FaceMeshClass({ locateFile: (file) => `https://unpkg.com/@mediapipe/face_mesh@0.4/${file}` });
         faceMesh.setOptions({ maxNumFaces: 1, refineLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
         faceMesh.onResults(onFaceResults);
+        
         document.getElementById("ai-loading-mask").style.display = "none";
+        // 🌟 修正：第一時間乾淨、順暢地呼叫初始化題目，防止狀態卡死
         showQuestion();
     }
 
@@ -526,7 +529,7 @@
         goToPhotoResultPage();
     }
 
-    // 🌟 核心超級黑科技：點擊按鈕時拍照、下載、上傳、秒出圖片 QR Code！
+    // 🌟 雲端圖床即時生成高解晰圖片 QR Code 核心邏輯
     function saveCurrentResultAndGenerateImgQr() {
         if (!window.html2canvas) { alert('html2canvas 未載入'); return; }
 
@@ -534,27 +537,25 @@
         const hintText = document.getElementById('qr-copy-hint-text');
         if (qrContainer) qrContainer.innerHTML = '沖洗中...';
 
-        // 1. 咔嚓！精準拍下左側完整的實體卡片區（包含標題、插圖、照片、語錄）
         const targetBox = document.getElementById('my-capture-target-box');
         html2canvas(targetBox, {
             backgroundColor: '#141414',
-            scale: 1.5, // 確保下載與掃描出來的卡片清晰度極高
+            scale: 1.5, 
             useCORS: true,
             logging: false
         }).then(canvas => {
             const imageDataUrl = canvas.toDataURL('image/jpeg', 0.85);
             
-            // 2. 實體下載到電腦下載夾
+            // 1. 電腦下載本機圖檔
             const link = document.createElement('a');
             link.href = imageDataUrl; link.download = `負能量回收證書_${detectedColor}.jpg`;
             document.body.appendChild(link); link.click(); link.remove();
 
-            // 3. 默默將這張圖片資料轉為二進位 Blob，上傳至匿名安全公共圖床 API
+            // 2. 上傳雲端換短網址
             const base64Raw = imageDataUrl.split(',')[1];
             let formData = new FormData();
             formData.append("image", base64Raw);
 
-            // 呼叫免 Token、全世界通用的免費高速圖床 API
             fetch("https://api.imgbb.com/1/upload?key=6d20715c33e4213383e69e73b357857a", {
                 method: "POST",
                 body: formData
@@ -562,14 +563,11 @@
             .then(res => res.json())
             .then(json => {
                 if (json.success) {
-                    // 4. 🌟 奇蹟誕生：拿到這張剛拍好的「合成卡片大圖」線上永久短網址！
                     const cloudImageUrl = json.data.url;
-
-                    // 5. 丟給產生器，因為是超短網址，QR code 格子會變得非常大、非常稀疏、任何手機 0.1 秒秒解秒讀！
                     if (qrContainer) {
-                        qrContainer.innerHTML = ''; // 清空字樣
+                        qrContainer.innerHTML = ''; 
                         qrCodeInstance = new QRCode(qrContainer, {
-                            text: cloudImageUrl, // 🌟 手機掃描後，會直接單獨打開這張沖洗好的整張卡片圖片！
+                            text: cloudImageUrl, 
                             width: 140, height: 140, colorDark: '#000000', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M
                         });
                         if (hintText) hintText.innerHTML = "🎉 條碼生成成功！請用手機掃描上方 QR Code，即可直接在手機下載儲存整張精彩證書大圖！📱";
@@ -578,7 +576,7 @@
             })
             .catch(err => {
                 if (qrContainer) qrContainer.innerHTML = '生成失敗';
-                console.error("圖床 API 故障，降級處理：", err);
+                console.error("圖床故障：", err);
             });
         });
     }
