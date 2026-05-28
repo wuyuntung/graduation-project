@@ -730,53 +730,44 @@
   }
 
   // 🌟 核心修正：按下「儲存結果」按鈕時，才同步觸發「傳送資料庫」、「生成真實QR碼」與「下載圖片」
-  async function saveCurrentResult() {
-    // 如果使用者還沒走到最後一頁，強行幫他導過去
+ async function saveCurrentResult() {
     if (document.getElementById('photo-result-page').style.display !== 'block') {
       goToPhotoResultPage();
       return;
     }
 
     const container = document.getElementById('qr-code-container');
-    const hintText = document.getElementById('qr-text-hint');
-    if (container) {
-      container.innerHTML = `<div style="font-size:11px; color:#999; text-align:center; padding-top:65px; font-weight:normal;">雲端提煉中...</div>`;
-    }
+    if (!container) return;
+
+    // 1. 清空舊內容
+    container.innerHTML = '';
 
     try {
       const baseUrl = window.location.href.split(/[?#]/)[0];
       const charName = document.getElementById('char-name').innerText || '未知角色';
       const quote = document.getElementById('quote-text').innerText || '';
-      
-      // 1. 打包點擊按鈕這一刻，畫面上所有的真實內容
-      const resultData = {
-        charName: charName,
-        quote: quote,
-        color: currentFinalColor,
-        photoDataUrl: capturedPhotoDataUrl || '' // 這就是你想要塞進去的成果內容！
-      };
+      const shareUrl = `${baseUrl}?color=${currentFinalColor}&name=${encodeURIComponent(charName)}&quote=${encodeURIComponent(quote)}`;
 
-      // 🚀 隔空傳送：用 Fetch 把資料瞬間非同步寫入 Google 試算表
-      await fetch(DATABASE_API_URL, {
-        method: "POST",
-        mode: "no-cors", 
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(resultData)
+      // 🌟 核心改動：直接使用本機載入的 QRCode 函式庫，在現場畫出一個標籤
+      // 這不是圖片，這是你網頁的一部分，html2canvas 絕對抓得到它！
+      new QRCode(container, {
+        text: shareUrl,
+        width: 156,
+        height: 156,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
       });
 
-      // 精簡縮短網址參數，確保 QR Code 顆粒度極低、手機絕對秒讀
-      const shareUrl = `${baseUrl}?color=${resultData.color}&name=${encodeURIComponent(charName)}&quote=${encodeURIComponent(quote)}`;
-      
-      // 🌟 即時變身：把真正的安全 https QR Code 圖片秒速注入畫面右下角！
-      if (container) {
-        container.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=156x156&data=${encodeURIComponent(shareUrl)}" alt="QR Code" style="width: 156px; height: 156px; display: block; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">`;
-      }
-      if (hintText) {
-        hintText.innerText = "提煉完成！此 QR 碼已真正綁定你的專屬結果，手機相機對準即可秒速掃描分享！";
-        hintText.style.color = "#ffdd67"; // 變金色提醒使用者
-      }
+      // 🌟 強制修正：qrcodejs 有時會產生 canvas 或 img，我們確保它顯示出來
+      setTimeout(() => {
+        const qrImg = container.querySelector('img');
+        const qrCanvas = container.querySelector('canvas');
+        if (qrImg) qrImg.style.display = 'block';
+        if (qrCanvas) qrCanvas.style.display = 'none'; // 隱藏 canvas，只留 img 比較好截圖
+      }, 50);
 
-      // 2. 📸 給瀏覽器 0.4 秒的時間把剛出爐的 QR Code 渲染出來，隨即觸發截圖下載
+      // 2. 📸 稍微等 500 毫秒，讓 QR Code 徹底「長」在網頁上，再執行你最成功的截圖下載
       setTimeout(async () => {
         try {
           const imageDataUrl = await exportCurrentPageImage();
@@ -786,14 +777,18 @@
           document.body.appendChild(link); 
           link.click(); 
           link.remove();
+          
+          // 下載完畢後，可以把提示文字改掉
+          const hintText = document.getElementById('qr-text-hint');
+          if (hintText) hintText.innerText = "提煉成功！QR 碼已包含在下載的照片中囉！";
         } catch (err) {
           console.error("下載圖片失敗：", err);
         }
-      }, 400);
+      }, 500);
 
     } catch (error) {
-      console.error('儲存結果並產生 QR 碼失敗：', error);
-      if (container) container.innerHTML = '<div style="font-size:12px; color:#ff4444;">發生錯誤</div>';
+      console.error('產生 QR 碼失敗：', error);
+      container.innerHTML = '<div style="font-size:12px; color:#ff4444;">QR 碼生成失敗</div>';
     }
   }
 
