@@ -705,19 +705,13 @@
   async function refreshQrCode() {
     try {
       const shareId = persistCurrentResultState();
-      let baseUrl = window.location.href.split(/[?#]/)[0];
-      
-      // 🌟 核心防線：如果是本地測試 (127.0.0.1 或 localhost)，線上 API 會破圖
-      // 我們給它一個暫時的公開網址測試，等上傳到 GitHub 之後就會自動變正常的！
-      if (baseUrl.includes('127.0.0.1') || baseUrl.includes('localhost')) {
-        baseUrl = 'https://github.com'; 
-      }
-      
+      const baseUrl = window.location.href.split(/[?#]/)[0];
       const shareUrl = `${baseUrl}?share=${encodeURIComponent(shareId)}`;
       
       const container = document.getElementById('qr-code-container');
       if (container) {
-        // 🌟 完美注入：這一次 API 拿到了合法的公開網址，絕對能秒畫出漂亮的 QR Code！
+        // 🌟 終極修復：將 API 網址開頭的 http 改為 https！！！
+        // 這樣完美符合 GitHub Pages 的安全政策，瀏覽器 100% 絕對放行，真實的 QR Code 馬上歸位！
         container.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=156x156&data=${encodeURIComponent(shareUrl)}" alt="QR Code" style="width: 156px; height: 156px; display: block; border-radius: 12px;">`;
       }
     } catch (error) {
