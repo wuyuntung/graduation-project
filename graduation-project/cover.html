@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>眼前的黑不是黑</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #0b0b0b;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        .cover-container {
+            text-align: center;
+            max-width: 600px;
+            width: 90%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-area {
+            position: relative;
+            width: 280px;
+            height: 280px;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cover-art {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 0 24px rgba(255, 221, 103, 0.18));
+        }
+
+        /* 標題與內文 */
+        h1 {
+            font-size: 48px;
+            font-weight: 900;
+            color: #ffdd67;
+            letter-spacing: 4px;
+            margin: 10px 0 20px 0;
+            text-shadow: 0 0 20px rgba(255, 221, 103, 0.3);
+        }
+
+        .subtitle {
+            font-size: 16px;
+            color: #888888;
+            letter-spacing: 6px;
+            margin-bottom: 50px;
+            font-weight: 300;
+        }
+
+        /* 進入按鈕 */
+        .start-btn {
+            background-color: transparent;
+            color: #ffdd67;
+            border: 2px solid #ffdd67;
+            padding: 16px 50px;
+            font-size: 18px;
+            font-weight: bold;
+            letter-spacing: 4px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+            box-shadow: 0 0 15px rgba(255, 221, 103, 0.1);
+        }
+
+        .start-btn:hover {
+            background-color: #ffdd67;
+            color: #0b0b0b;
+            box-shadow: 0 0 30px #ffdd67;
+            transform: scale(1.05);
+        }
+
+        /* 右下角標語 */
+        .footer-tag {
+            position: absolute;
+            bottom: 30px;
+            right: 40px;
+            font-size: 13px;
+            color: #444444;
+            letter-spacing: 2px;
+            font-style: italic;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="cover-container">
+        <div class="logo-area">
+            <img class="cover-art" src="./images/pattern_original.png" alt="pattern_original">
+        </div>
+
+        <h1>眼前的黑不是黑</h1>
+        <div class="subtitle">一場彩色黑眼圈的負負得正回收站計畫</div>
+
+        <button class="start-btn" onclick="navigateToQuiz()">進入回收程序</button>
+    </div>
+
+    <div class="footer-tag">「進來前滿臉疲容，出去後負負得正」</div>
+
+    <script>
+        // 跳轉到同一個資料夾下的 index.html
+        function navigateToQuiz() {
+            window.location.href = "./index.html";
+        }
+    </script>
+</body>
+</html>
