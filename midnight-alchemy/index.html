@@ -7,6 +7,7 @@
   
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" crossorigin="anonymous"></script>
   
   <style>
@@ -226,7 +227,6 @@
 
     .qr-section { margin: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
     
-    /* 🌟 修改點：一進來時的預設微光美化容器，不再是大白塊 */
     #qr-code-container { 
       width: 156px; 
       height: 156px; 
@@ -573,7 +573,7 @@
     { q: "1. 鬧鐘響起的那一刻,你通常第一個冒出的念頭是?", a: ["完蛋,今天有一堆事要做...", "再讓我逃避世界5分鐘...", "毫觀感覺,像機器人一樣起床。", "又是新的一天,雖然累但出發吧!"], scores: [8, 6, 4, 2] },
     { q: "2. 在捷運或公車上,你的眼睛和手通常在做什麼?", a: ["瘋狂刷社群、回訊息,深怕漏掉任何資訊。", "盯著窗外放空,進入自己的小宇宙。", "閉目養神,但腦袋其實還在轉。", "觀察身邊的乘客,或看書、聽音樂。"], scores: [8, 6, 4, 2] },
     { q: "3. 如果你的工作/課業壓力是一頂帽子,你覺得現在這頂帽子?", a: ["重到快把我的頸椎壓斷了。", "有點大頂,遮住了我前方的視線,讓我有點迷惘。", "顏色太鮮豔了,周圍的人一直在盯著看,讓我好焦慮。", "還算合身,只是戴久了角點悶。"], scores: [8, 6, 4, 2] },
-    { q: "4. 當你遇到意見不合的豬隊友時,你內心的第一直覺是?", a: ["火火火!好想直接拍桌大吵一架!", "算了,心好累,你說什麼都對(內心開始擺爛)。", "表面微笑說好,私底下瘋狂跟朋友寫小作文抱怨。", "試圖冷靜分析,找出兩全其美的解決辦法。"], scores: [8, 6, 4, 2] },
+    { q: "4. 當你遇到意見不合的豬隊友時,你內心的第一直覺是?", a: ["火火火!好想直接拍桌大吵一架!", "算了,心好累,你說什麼都對(內心開始擺擺)。", "表面微笑說好,私底下瘋狂跟朋友寫小作文抱怨。", "試圖冷靜分析,找出兩全其美的解決辦法。"], scores: [8, 6, 4, 2] },
     { q: "5. 連續熬夜幾天後,你照鏡子看著自己的黑眼圈,你覺得它像什麼?", a: ["像被揍了一拳,充滿戰鬥過的痕跡。", "像暈開的煙燻妝,有一種頹廢的美感。", "像發霉的年糕,看著就讓人焦慮。", "像一塊擦不掉的污漬,乾脆假裝沒看到。"], scores: [8, 6, 4, 2] },
     { q: "6. 午餐時間到了,面對琳瑯滿目的選擇,你通常怎麼決定?", a: ["選擇障礙大爆發,看評論看很久還是決定不了。", "點最刺激的!麻辣鍋、炸雞,垃圾食物才能續命!", "跟著別人點,或者吃跟昨天一模一樣的,懶得思考。", "挑相對健康的健康便當,試圖挽救一下身體。"], scores: [8, 6, 4, 2] },
     { q: "7. 深夜躺在床上準備睡覺時,你的大腦通常在播放什麼?", a: ["開始回顧今天講錯的話,或是五年前的尷尬往事。", "對明天的未知感到焦慮,翻來覆去睡不著。", "腦袋像一片虛無,但就是想繼續滑手機不想睡。", "播放一些輕音樂或白噪音,試圖讓自己平靜。"], scores: [8, 6, 4, 2] },
@@ -729,7 +729,7 @@
     document.getElementById('photo-quote-text').innerText = document.getElementById('quote-text').innerText;
   }
 
- // 🌟 資料庫＋照片儲存＋在地繪製 QR Code 的終極大團圓完全體！
+  // 🌟 資料庫＋照片儲存＋在地繪製 QR Code 的終極大團圓完全體！
   async function saveCurrentResult() {
     if (document.getElementById('photo-result-page').style.display !== 'block') {
       goToPhotoResultPage();
@@ -803,6 +803,16 @@
       console.error('儲存失敗：', error);
       container.innerHTML = '<div style="font-size:12px; color:#ff4444; padding-top:60px;">QR 碼提煉失敗</div>';
     }
+  }
+
+  async function exportCurrentPageImage() {
+    if (!window.html2canvas) throw new Error('html2canvas 未載入');
+    const target = document.getElementById('photo-result-page'); 
+    if (!target) throw new Error('找不到 photo-result-page');
+    const canvas = await html2canvas(target, {
+      backgroundColor: '#141414', scale: 2, useCORS: true, logging: false
+    });
+    return canvas.toDataURL('image/jpeg', 0.9);
   }
 
   function ensureResultEyeImages() {
