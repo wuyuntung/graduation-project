@@ -342,7 +342,7 @@
 </div>
 
 <script>
-  const DATABASE_API_URL = "https://script.google.com/macros/s/AKfycbzwdbSwxhGiK2jT7iE5-R6N-74QoN-fnrbtIGesQbDF72T2aoIY31yy0p1kbNDKAkI/exechttps://script.google.com/macros/s/AKfycbzwdbSwxhGiK2jT7iE5-R6N-74QoN-fnrbtIGesQbDF72T2aoIY31yy0p1kbNDKAkI/exec";
+  const DATABASE_API_URL = "https://script.google.com/macros/s/AKfycbzwdbSwxhGiK2jT7iE5-R6N-74QoN-fnrbtIGesQbDF72T2aoIY31yy0p1kbNDKAkI/exec";
   let faceMesh;
   let camera;
   let videoElement;
@@ -768,22 +768,21 @@
       }
 
       // 2. 🚀 使用最穩定的表單格式發射去 Google 試算表
-      const formData = new URLSearchParams();
-      formData.append('id', uniqueId);
-      formData.append('charName', charName);
-      formData.append('quote', quote);
-      formData.append('color', currentFinalColor);
-      formData.append('photoDataUrl', capturedPhotoDataUrl || '');
-
+      // 2. 🌟 終極修正：改用 text/plain 發送 JSON 數據，這是唯一能 100% 穿透 Google CORS 的隱形盾牌！
       fetch(DATABASE_API_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: formData.toString()
+        headers: { "Content-Type": "text/plain;charset=utf-8" }, // 偽裝成純文字，粉碎 CORS 預檢阻擋！
+        body: JSON.stringify({
+          id: uniqueId,
+          charName: charName,
+          quote: quote,
+          color: currentFinalColor,
+          photoDataUrl: capturedPhotoDataUrl || '' // 包含自拍照
+        })
       })
       .then(res => res.json())
       .then(resData => console.log("資料庫寫入成功：", resData))
       .catch(err => console.error("資料庫寫入波折：", err));
-
       // 3. 📸 延時截圖下載
       setTimeout(async () => {
         try {
