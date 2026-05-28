@@ -729,7 +729,7 @@
     document.getElementById('photo-quote-text').innerText = document.getElementById('quote-text').innerText;
   }
 
-  // 🌟 資料庫＋照片儲存＋在地繪製 QR Code 的終極大團圓完全體！
+ // 🌟 最終防爆對線版：徹底隔離當機風險，確保先畫 QR 碼、再穩穩送試算表！
   async function saveCurrentResult() {
     if (document.getElementById('photo-result-page').style.display !== 'block') {
       goToPhotoResultPage();
@@ -740,36 +740,16 @@
     const hintText = document.getElementById('qr-text-hint');
     if (!container) return;
 
+    // 1. 先給一個安全、絕對能生成的隨機 ID 
+    const uniqueId = "id_" + new Date().getTime() + "_" + Math.floor(Math.random() * 1000);
+    const baseUrl = window.location.origin + window.location.pathname;
+    const charName = document.getElementById('char-name').innerText || '未知角色';
+    const quote = document.getElementById('quote-text').innerText || '';
+
     try {
-      const baseUrl = window.location.href.split(/[?#]/)[0];
-      const charName = document.getElementById('char-name').innerText || '未知角色';
-      const quote = document.getElementById('quote-text').innerText || '';
-      const finalPhoto = capturedPhotoDataUrl || ''; 
-
-      // 1. 產生與試算表對齊的專屬短 id
-      const shareId = "id_" + new Date().getTime() + "_" + Math.floor(Math.random() * 1000);
-
-      // 2. 打包要橫向寫入試算表的完整包裹
-      const resultData = {
-        charName: charName,
-        quote: quote,
-        color: currentFinalColor,
-        photoDataUrl: finalPhoto
-      };
-
-      // 🚀 隔空傳送：用背景非同步 Fetch 把巨大的照片塞進 Google 試算表（表格欄位已橫放，這次會乖乖各就各位！）
-      fetch(DATABASE_API_URL, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(resultData)
-      }).catch(err => console.log("背景上傳稍有延遲，不影響主程式：", err));
-
-      // 3. 👑 現場作畫防線：不等後端回應，現場立刻用 qrcode.js 把乾淨短網址畫在右下角！
-      // 網址只帶這個唯一的 shareId，顆粒極低，手機保證秒讀成功！
+      // 2. 👑 優先畫出 QR Code！不等待任何異步截圖，確保「提煉失敗」絕對不發生
       const shareUrl = `${baseUrl}?id=${uniqueId}`;
       container.innerHTML = '';
-      
       new QRCode(container, {
         text: shareUrl,
         width: 156,
@@ -780,28 +760,55 @@
       });
 
       if (hintText) {
-        hintText.innerText = "回收成功！專屬雲端分享 QR 碼已打包進你下載的圖片中囉！";
-        hintText.style.color = "#ffdd67"; 
+        hintText.innerText = "提煉成功！專屬 QR 碼已同步包含在下載的圖片中囉！";
+        hintText.style.color = "#ffdd67";
       }
 
-      // 4. 📸 給瀏覽器 0.5 秒的時間把剛畫好的黑白格子渲染完整，隨即觸發你最完美的截圖下載！
+      // 3. 🚀 默默在背景把資料送去你的試算表（與 uniqueId 完美對應）
+      fetch(DATABASE_API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" }, // 避開 CORS 預檢
+        body: JSON.stringify({
+          id: uniqueId,
+          charName: charName,
+          quote: quote,
+          color: currentFinalColor,
+          photoDataUrl: capturedPhotoDataUrl || '' // 真人自拍照
+        })
+      })
+      .then(res => res.json())
+      .then(resData => console.log("雲端備份成功：", resData))
+      .catch(err => console.error("雲端寫入有波折，但免驚：", err));
+
+      // 4. 📸 稍微停頓 0.5 秒，確保黑白格子長好，強行觸發截圖下載
       setTimeout(async () => {
         try {
-          const imageDataUrl = await exportCurrentPageImage();
-          const link = document.createElement('a'); 
-          link.href = imageDataUrl; 
-          link.download = `${charName}_成果回收報告.jpg`;
-          document.body.appendChild(link); 
-          link.click(); 
-          link.remove();
+          let finalDataUrl = '';
+          if (typeof exportCurrentPageImage === 'function') {
+            finalDataUrl = await exportCurrentPageImage();
+          } else if (window.html2canvas) {
+            // 如果 exportCurrentPageImage 壞了，直接現場現場調用 html2canvas 防爆
+            const target = document.getElementById('photo-result-page');
+            const canvas = await html2canvas(target, { backgroundColor: '#141414', scale: 2, useCORS: true });
+            finalDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+          }
+          
+          if (finalDataUrl) {
+            const link = document.createElement('a');
+            link.href = finalDataUrl;
+            link.download = `${charName}_成果回收報告.jpg`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+          }
         } catch (err) {
-          console.error("截圖下載失敗：", err);
+          console.error("截圖下載遇到瓶頸：", err);
         }
       }, 500);
 
     } catch (error) {
-      console.error('儲存失敗：', error);
-      container.innerHTML = '<div style="font-size:12px; color:#ff4444; padding-top:60px;">QR 碼提煉失敗</div>';
+      console.error('儲存核心程序出錯：', error);
+      container.innerHTML = '<div style="font-size:12px; color:#ff4444;">QR 碼提煉失敗</div>';
     }
   }
 
