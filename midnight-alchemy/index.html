@@ -767,7 +767,7 @@
 
       // 3. 👑 現場作畫防線：不等後端回應，現場立刻用 qrcode.js 把乾淨短網址畫在右下角！
       // 網址只帶這個唯一的 shareId，顆粒極低，手機保證秒讀成功！
-      const shareUrl = `${baseUrl}?share=${shareId}`;
+      const shareUrl = `${baseUrl}?id=${uniqueId}`;
       container.innerHTML = '';
       
       new QRCode(container, {
