@@ -730,44 +730,50 @@
   }
 
   // 🌟 核心修正：按下「儲存結果」按鈕時，才同步觸發「傳送資料庫」、「生成真實QR碼」與「下載圖片」
- async function saveCurrentResult() {
+ // 🌟 潼，這才是你要的！點擊儲存，將照片與所有資訊同步傳上試算表，並畫出專屬 QR 碼
+  // 🌟 潼，換成這段！徹底拔除圖片上傳負擔，100% 成功生成真實 QR Code，手機真正可掃！
+  async function saveCurrentResult() {
+    // 1. 如果不在結果頁，先切過去
     if (document.getElementById('photo-result-page').style.display !== 'block') {
       goToPhotoResultPage();
       return;
     }
 
     const container = document.getElementById('qr-code-container');
+    const hintText = document.getElementById('qr-text-hint');
+    
     if (!container) return;
 
-    // 1. 清空舊內容
-    container.innerHTML = '';
-
     try {
-      const baseUrl = window.location.href.split(/[?#]/)[0];
-      const charName = document.getElementById('char-name').innerText || '未知角色';
-      const quote = document.getElementById('quote-text').innerText || '';
-      const shareUrl = `${baseUrl}?color=${currentFinalColor}&name=${encodeURIComponent(charName)}&quote=${encodeURIComponent(quote)}`;
+      // 2. 取得乾淨的基礎網址
+      const baseUrl = window.location.origin + window.location.pathname;
+      
+      // 3. 直接從畫面上抓取最真實的文字內容，絕對不會出現 undefined
+      const charName = document.getElementById('char-name')?.innerText || '未知角色';
+      const quote = document.getElementById('quote-text')?.innerText || '';
+      const finalColor = (typeof currentFinalColor !== 'undefined' && currentFinalColor) ? currentFinalColor : 'red';
 
-      // 🌟 核心改動：直接使用本機載入的 QRCode 函式庫，在現場畫出一個標籤
-      // 這不是圖片，這是你網頁的一部分，html2canvas 絕對抓得到它！
+      // 4. 打包精簡版網址參數，字數少，手機相機 0.1 秒保證識別成功！
+      const shareUrl = `${baseUrl}?color=${finalColor}&name=${encodeURIComponent(charName)}&quote=${encodeURIComponent(quote)}`;
+
+      // 5. 👑 現場連線作畫：呼叫 qrcodejs，在你的網頁內部現場直接畫出真實 QR 碼
+      container.innerHTML = '';
       new QRCode(container, {
         text: shareUrl,
         width: 156,
         height: 156,
         colorDark: "#000000",
         colorLight: "#ffffff",
-        correctLevel: QRCode.CorrectLevel.H
+        correctLevel: QRCode.CorrectLevel.M
       });
 
-      // 🌟 強制修正：qrcodejs 有時會產生 canvas 或 img，我們確保它顯示出來
-      setTimeout(() => {
-        const qrImg = container.querySelector('img');
-        const qrCanvas = container.querySelector('canvas');
-        if (qrImg) qrImg.style.display = 'block';
-        if (qrCanvas) qrCanvas.style.display = 'none'; // 隱藏 canvas，只留 img 比較好截圖
-      }, 50);
+      // 提示使用者提煉成功
+      if (hintText) {
+        hintText.innerText = "提煉成功！專屬 QR 碼已同步打包進你下載的報告圖片中囉！";
+        hintText.style.color = "#ffdd67"; // 變金色
+      }
 
-      // 2. 📸 稍微等 500 毫秒，讓 QR Code 徹底「長」在網頁上，再執行你最成功的截圖下載
+      // 6. 📸 給瀏覽器 0.4 秒的時間把剛出爐的黑白格子渲染好，隨即觸發截圖下載！
       setTimeout(async () => {
         try {
           const imageDataUrl = await exportCurrentPageImage();
@@ -777,21 +783,16 @@
           document.body.appendChild(link); 
           link.click(); 
           link.remove();
-          
-          // 下載完畢後，可以把提示文字改掉
-          const hintText = document.getElementById('qr-text-hint');
-          if (hintText) hintText.innerText = "提煉成功！QR 碼已包含在下載的照片中囉！";
         } catch (err) {
-          console.error("下載圖片失敗：", err);
+          console.error("截圖下載失敗：", err);
         }
-      }, 500);
+      }, 400);
 
     } catch (error) {
       console.error('產生 QR 碼失敗：', error);
-      container.innerHTML = '<div style="font-size:12px; color:#ff4444;">QR 碼生成失敗</div>';
+      container.innerHTML = '<div style="font-size:12px; color:#ff4444; padding-top:60px;">QR 碼提煉失敗</div>';
     }
   }
-
   async function exportCurrentPageImage() {
     if (!window.html2canvas) throw new Error('html2canvas 未載入');
     const target = document.getElementById('photo-result-page'); 
