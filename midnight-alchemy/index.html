@@ -729,7 +729,7 @@
     document.getElementById('photo-quote-text').innerText = document.getElementById('quote-text').innerText;
   }
 
- // 🌟 最終防爆對線版：徹底隔離當機風險，確保先畫 QR 碼、再穩穩送試算表！
+ // 🌟 潼，這就是最後一吋的焊鐵了！抓錯防護全開，絕對不當機版！
   async function saveCurrentResult() {
     if (document.getElementById('photo-result-page').style.display !== 'block') {
       goToPhotoResultPage();
@@ -740,14 +740,22 @@
     const hintText = document.getElementById('qr-text-hint');
     if (!container) return;
 
-    // 1. 先給一個安全、絕對能生成的隨機 ID 
     const uniqueId = "id_" + new Date().getTime() + "_" + Math.floor(Math.random() * 1000);
     const baseUrl = window.location.origin + window.location.pathname;
-    const charName = document.getElementById('char-name').innerText || '未知角色';
-    const quote = document.getElementById('quote-text').innerText || '';
+    
+    // 🛡️ 核心安全防線：用最聰明的方式抓名字與台詞，就算 ID 名字打錯也絕對不當機！
+    let charName = '未知角色';
+    let quote = '';
+    
+    try {
+      charName = document.getElementById('photo-page-title')?.innerText || document.getElementById('char-name')?.innerText || '大同電鍋英雄';
+      quote = document.getElementById('photo-quote-text')?.innerText || document.getElementById('quote-text')?.innerText || '';
+    } catch(e) {
+      console.log("名稱元件讀取有小波折，但免驚，防線已啟動");
+    }
 
     try {
-      // 2. 👑 優先畫出 QR Code！不等待任何異步截圖，確保「提煉失敗」絕對不發生
+      // 1. 👑 優先強制變出 QR Code！
       const shareUrl = `${baseUrl}?id=${uniqueId}`;
       container.innerHTML = '';
       new QRCode(container, {
@@ -764,30 +772,29 @@
         hintText.style.color = "#ffdd67";
       }
 
-      // 3. 🚀 默默在背景把資料送去你的試算表（與 uniqueId 完美對應）
+      // 2. 🚀 送資料去試算表
       fetch(DATABASE_API_URL, {
         method: "POST",
-        headers: { "Content-Type": "text/plain" }, // 避開 CORS 預檢
+        headers: { "Content-Type": "text/plain" },
         body: JSON.stringify({
           id: uniqueId,
           charName: charName,
           quote: quote,
           color: currentFinalColor,
-          photoDataUrl: capturedPhotoDataUrl || '' // 真人自拍照
+          photoDataUrl: capturedPhotoDataUrl || ''
         })
       })
       .then(res => res.json())
       .then(resData => console.log("雲端備份成功：", resData))
-      .catch(err => console.error("雲端寫入有波折，但免驚：", err));
+      .catch(err => console.error("雲端寫入有波折：", err));
 
-      // 4. 📸 稍微停頓 0.5 秒，確保黑白格子長好，強行觸發截圖下載
+      // 3. 📸 延時截圖下載
       setTimeout(async () => {
         try {
           let finalDataUrl = '';
           if (typeof exportCurrentPageImage === 'function') {
             finalDataUrl = await exportCurrentPageImage();
           } else if (window.html2canvas) {
-            // 如果 exportCurrentPageImage 壞了，直接現場現場調用 html2canvas 防爆
             const target = document.getElementById('photo-result-page');
             const canvas = await html2canvas(target, { backgroundColor: '#141414', scale: 2, useCORS: true });
             finalDataUrl = canvas.toDataURL('image/jpeg', 0.9);
