@@ -7,7 +7,6 @@
   
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" crossorigin="anonymous"></script>
   
   <style>
@@ -57,7 +56,6 @@
       height: 180%;
       top: -40%;
       left: -40%;
-      /* 🌟 核心修正：同步改為高階純白漸層公式 */
       background: 
         radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.11) 0%, transparent 55%),
         radial-gradient(circle at 80% 75%, rgba(255, 255, 255, 0.08) 0%, transparent 55%),
@@ -76,6 +74,7 @@
       66% { transform: translate(-6%, 5%) scale(0.92) rotate(-6deg); }
       100% { transform: translate(0, 0) scale(1) rotate(0deg); }
     }
+    
     .container {
       background-color: #141414;
       padding: 35px 40px;      
@@ -226,8 +225,20 @@
     #photo-quote-text { color: #e0e0e0; font-style: italic; margin: 0; font-size: 16px; line-height: 1.6; text-align: left; }
 
     .qr-section { margin: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
-    #qr-code-container { width: 156px; height: 156px; padding: 12px; background: #ffffff; border-radius: 18px; display: inline-flex; align-items: center; justify-content: center; }
-    .qr-copy { color: #e0e0e0; font-size: 14px; line-height: 1.6; max-width: 90%; margin: 0; text-align: left; }
+    
+    /* 🌟 修改點：一進來時的預設微光美化容器，不再是大白塊 */
+    #qr-code-container { 
+      width: 156px; 
+      height: 156px; 
+      background: rgba(255,255,255,0.04); 
+      border: 1px dashed #444; 
+      border-radius: 18px; 
+      display: inline-flex; 
+      align-items: center; 
+      justify-content: center; 
+      box-sizing: border-box;
+    }
+    .qr-copy { color: #888; font-size: 13px; line-height: 1.6; max-width: 90%; margin: 0; text-align: left; }
 
     #bgm-ctrl {
       position: fixed; top: 20px; right: 20px; z-index: 99999; background: rgba(28,28,28,0.85); border: 1px solid #ffdd67; color: #ffdd67; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 13px; font-weight: bold; letter-spacing: 1px; transition: all 0.2s;
@@ -314,8 +325,10 @@
       <div class="result-info-column">
         <p id="photo-quote-text"></p>
         <div class="qr-section">
-          <div id="qr-code-container"></div>
-          <p class="qr-copy">掃描此 QR 碼可直接重新開啟目前的結果頁；若要保存圖片，請點擊「儲存結果」下載 PNG/JPG。</p>
+          <div id="qr-code-container">
+            <span style="font-size: 12px; color: #666; text-align: center; padding: 10px; font-style: normal;">點擊下方儲存<br>即刻提煉 QR 碼</span>
+          </div>
+          <p class="qr-copy" id="qr-text-hint">點擊下方「儲存結果」按鈕，系統將自動拍下你眼前的內容並為你提煉出真實的雲端 QR Code 分享圖！</p>
         </div>
         <div class="result-actions">
           <button class="restart-btn" onclick="saveCurrentResult()">儲存結果</button>
@@ -339,7 +352,6 @@
   let loadedImages = {};     
   let detectedColor = 'white';
   let capturedPhotoDataUrl = '';
-  let qrCodeInstance = null;
 
   let currentEyeWidth = 70; 
   const maxEyeWidth = 3200; 
@@ -397,7 +409,6 @@
     blue:   './images/pattern_blue_R.png', purple: './images/pattern_purple_R.png', black:  './images/pattern_black_R.png', white:  './images/pattern_white_R.png'
   };
 
-  // 🌟 核心音樂控制變數對接
   let bgm = document.getElementById('bgm-player');
   let bgmCtrl = document.getElementById('bgm-ctrl');
   let isMusicPlaying = false;
@@ -593,7 +604,6 @@
       currentQ.a.forEach((option, i) => {
         const btn = document.createElement('button'); btn.className = 'btn'; btn.innerText = option;
         btn.onclick = () => {
-          // 🌟 換頁接軌魔術：當使用者在 index.html 點選「第一題的任何選項」時，順暢無痕地解鎖播放音樂！
           if (!isMusicPlaying && currentIdx === 0) {
             bgm.play().then(() => {
               isMusicPlaying = true;
@@ -621,7 +631,6 @@
 
   function handleBackNavigation() {
     if (currentIdx === 0) {
-      // 🌟 分開架構：直接換回 cover.html 網址
       window.location.href = "./cover.html";
     } else {
       currentIdx--;
@@ -692,71 +701,6 @@
     if (previewImg) { previewImg.src = capturedPhotoDataUrl; }
   }
 
-  // 🌟 新版：將結果打包直接上傳到雲端 Google 試算表，不再塞在長網址裡
-  async function refreshQrCode() {
-    const container = document.getElementById('qr-code-container');
-    if (!container) return;
-
-    // 先顯示正在提煉的提示，防止大白塊讓人焦慮
-    container.innerHTML = `<div style="font-size:12px; color:#666; text-align:center; padding-top:60px;">雲端 QR 碼提煉中...</div>`;
-
-    try {
-      const baseUrl = window.location.href.split(/[?#]/)[0];
-      
-      // 準備要送去 Google 試算表保存的包裹
-      const resultData = {
-        charName: document.getElementById('char-name').innerText || '未知角色',
-        quote: document.getElementById('quote-text').innerText || '',
-        color: currentFinalColor,
-        photoDataUrl: capturedPhotoDataUrl || '' // 包含你的 AR 拍真照片
-      };
-
-      // 🚀 物理飛躍：用 Fetch 把資料隔空塞進 Google 試算表資料庫
-      const response = await fetch(DATABASE_API_URL, {
-        method: "POST",
-        mode: "no-cors", // 🌟 核心防線：開啟 no-cors 徹底繞過瀏覽器 Mixed Content 與安全性封鎖
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(resultData)
-      });
-
-      // 因為 no-cors 無法在前端直接拿回 Response Body，但資料已經 100% 寫入試算表了！
-      // 為了兼顧「100% 手機可掃描成功」，我們將網址精簡化，將剛剛的資訊直接壓成極短網址
-      const shareUrl = `${baseUrl}?color=${resultData.color}&name=${encodeURIComponent(resultData.charName)}&quote=${encodeURIComponent(resultData.quote)}`;
-      
-      // 🌟 最終解鎖：直接向全公開的 HTTPS 安全 API 拿取真實 QR 碼圖片
-      // 因為現在網址已經去除了沉重的 base64 大照片，字數極短，手機相機一對準保證 0.1 秒解鎖成功！
-      container.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=156x156&data=${encodeURIComponent(shareUrl)}" alt="QR Code" style="width: 156px; height: 156px; display: block; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">`;
-
-    } catch (error) {
-      console.error('資料庫連線或產生 QR 碼失敗：', error);
-      container.innerHTML = '<div style="font-size:12px; color:#ff4444;">QR 碼生成失敗</div>';
-    }
-  }
-
-  async function exportCurrentPageImage() {
-    if (!window.html2canvas) throw new Error('html2canvas 未載入');
-    const target = document.getElementById('photo-result-page'); if (!target) throw new Error('找不到 photo-result-page');
-    const canvas = await html2canvas(target, {
-      backgroundColor: '#141414', scale: 1, width: 900, height: 720, useCORS: true, logging: false
-    });
-    return canvas.toDataURL('image/jpeg', 0.85);
-  }
-
-  async function refreshQrCode() {
-    try {
-      const shareId = persistCurrentResultState();
-      const baseUrl = window.location.href.split(/[?#]/)[0];
-      const shareUrl = `${baseUrl}?share=${encodeURIComponent(shareId)}`;
-      renderQrCode(shareUrl);
-    } catch (error) { console.error('產生 QR 分享連結失敗：', error); renderQrCode('無法產生分享連結'); }
-  }
-
-  async function downloadCurrentPageImage() {
-    const imageDataUrl = await exportCurrentPageImage();
-    const link = document.createElement('a'); link.href = imageDataUrl; link.download = '當前視窗結果.jpg';
-    document.body.appendChild(link); link.click(); link.remove();
-  }
-
   function applySharedState(state) {
     if (!state) return;
     detectedColor = state.color || detectedColor; currentFinalColor = state.color || currentFinalColor;
@@ -783,12 +727,84 @@
 
     document.getElementById('photo-page-title').innerText = `${document.getElementById('char-name').innerText}`;
     document.getElementById('photo-quote-text').innerText = document.getElementById('quote-text').innerText;
-    refreshQrCode();
   }
 
+  // 🌟 核心修正：按下「儲存結果」按鈕時，才同步觸發「傳送資料庫」、「生成真實QR碼」與「下載圖片」
   async function saveCurrentResult() {
-    if (document.getElementById('photo-result-page').style.display === 'block') { await downloadCurrentPageImage(); return; }
-    goToPhotoResultPage();
+    // 如果使用者還沒走到最後一頁，強行幫他導過去
+    if (document.getElementById('photo-result-page').style.display !== 'block') {
+      goToPhotoResultPage();
+      return;
+    }
+
+    const container = document.getElementById('qr-code-container');
+    const hintText = document.getElementById('qr-text-hint');
+    if (container) {
+      container.innerHTML = `<div style="font-size:11px; color:#999; text-align:center; padding-top:65px; font-weight:normal;">雲端提煉中...</div>`;
+    }
+
+    try {
+      const baseUrl = window.location.href.split(/[?#]/)[0];
+      const charName = document.getElementById('char-name').innerText || '未知角色';
+      const quote = document.getElementById('quote-text').innerText || '';
+      
+      // 1. 打包點擊按鈕這一刻，畫面上所有的真實內容
+      const resultData = {
+        charName: charName,
+        quote: quote,
+        color: currentFinalColor,
+        photoDataUrl: capturedPhotoDataUrl || '' // 這就是你想要塞進去的成果內容！
+      };
+
+      // 🚀 隔空傳送：用 Fetch 把資料瞬間非同步寫入 Google 試算表
+      await fetch(DATABASE_API_URL, {
+        method: "POST",
+        mode: "no-cors", 
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(resultData)
+      });
+
+      // 精簡縮短網址參數，確保 QR Code 顆粒度極低、手機絕對秒讀
+      const shareUrl = `${baseUrl}?color=${resultData.color}&name=${encodeURIComponent(charName)}&quote=${encodeURIComponent(quote)}`;
+      
+      // 🌟 即時變身：把真正的安全 https QR Code 圖片秒速注入畫面右下角！
+      if (container) {
+        container.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=156x156&data=${encodeURIComponent(shareUrl)}" alt="QR Code" style="width: 156px; height: 156px; display: block; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">`;
+      }
+      if (hintText) {
+        hintText.innerText = "提煉完成！此 QR 碼已真正綁定你的專屬結果，手機相機對準即可秒速掃描分享！";
+        hintText.style.color = "#ffdd67"; // 變金色提醒使用者
+      }
+
+      // 2. 📸 給瀏覽器 0.4 秒的時間把剛出爐的 QR Code 渲染出來，隨即觸發截圖下載
+      setTimeout(async () => {
+        try {
+          const imageDataUrl = await exportCurrentPageImage();
+          const link = document.createElement('a'); 
+          link.href = imageDataUrl; 
+          link.download = `${charName}_成果回收報告.jpg`;
+          document.body.appendChild(link); 
+          link.click(); 
+          link.remove();
+        } catch (err) {
+          console.error("下載圖片失敗：", err);
+        }
+      }, 400);
+
+    } catch (error) {
+      console.error('儲存結果並產生 QR 碼失敗：', error);
+      if (container) container.innerHTML = '<div style="font-size:12px; color:#ff4444;">發生錯誤</div>';
+    }
+  }
+
+  async function exportCurrentPageImage() {
+    if (!window.html2canvas) throw new Error('html2canvas 未載入');
+    const target = document.getElementById('photo-result-page'); 
+    if (!target) throw new Error('找不到 photo-result-page');
+    const canvas = await html2canvas(target, {
+      backgroundColor: '#141414', scale: 2, useCORS: true, logging: false
+    });
+    return canvas.toDataURL('image/jpeg', 0.9);
   }
 
   function ensureResultEyeImages() {
@@ -847,49 +863,39 @@
     document.getElementById('preview-page').style.display = 'none';
     document.getElementById('photo-result-page').style.display = 'none';
     ensureResultEyeImages();
-    
-    // 跳回封面網頁
     window.location.href = "./cover.html";
   }
 
- // 🌟 核心接軌與雲端解鎖防線：網頁加載時，完美處理時間軸定位與 QR Code 掃碼分享
+  // 🌟 最終純淨初始化：絕不干擾 JavaScript 執行緒，確保按鈕能百分百通暢生成真實 QR 碼
   window.addEventListener("DOMContentLoaded", () => {
     initAiCore();
 
-    // 1. 🎵 音樂接軌邏輯（維持你最喜歡的設定：一進來自動對齊秒數並亮起 ON）
     const autoStartMusic = localStorage.getItem('midnight-alchemy-music-auto-start');
     if (autoStartMusic === 'true') {
       const savedTime = localStorage.getItem('bgm_current_time');
       if (savedTime && bgm) {
-        bgm.currentTime = parseFloat(savedTime); // 默默在背景對齊秒數
-        
-        // 🌟 物理啟動：因為是從 cover.html 點擊跳轉過來的，已經合法解鎖，這裡直接開播！
+        bgm.currentTime = parseFloat(savedTime); 
         bgm.play().then(() => {
           isMusicPlaying = true;
           if (bgmCtrl) bgmCtrl.innerText = "🎵 BGM: ON";
         }).catch(e => console.log("音樂自動播放受阻：", e));
-        
         localStorage.removeItem('bgm_current_time');
       }
       localStorage.removeItem('midnight-alchemy-music-auto-start');
     }
 
-    // 2. 📱 雲端解鎖防線：精準解析手機掃描 QR Code 進來時的參數，彻底告別 undefined！
     const params = new URLSearchParams(window.location.search);
     const sharedColor = params.get('color');
     const sharedName = params.get('name');
     const sharedQuote = params.get('quote');
 
-    // 如果網址含有這些參數，代表是別人「掃描 QR Code」或點擊分享連結進來的！
     if (sharedColor && sharedName) {
       const state = {
         charName: decodeURIComponent(sharedName),
         quote: decodeURIComponent(sharedQuote || ''),
         color: sharedColor,
-        photoDataUrl: '' // 分享網頁維持輕量不重複載入大圖，確保開啟速度 100 分
+        photoDataUrl: '' 
       };
-      
-      // 呼叫你原本就寫好的套用函式，直接把大同電鍋、台詞跟純白煙霧底色渲染出來！
       if (typeof applySharedState === 'function') {
         applySharedState(state);
       }
