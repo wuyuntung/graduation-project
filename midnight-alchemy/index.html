@@ -874,10 +874,11 @@
     window.location.href = "./cover.html";
   }
 
-  // 🌟 最終純淨初始化：絕不干擾 JavaScript 執行緒，確保按鈕能百分百通暢生成真實 QR 碼
+  // 🌟 潼，這就是你要的！手機掃描進來，一秒洗掉網頁，只秀出成果大照片！
   window.addEventListener("DOMContentLoaded", () => {
     initAiCore();
 
+    // 1. 🎵 正常的音樂接軌（原封不動保留）
     const autoStartMusic = localStorage.getItem('midnight-alchemy-music-auto-start');
     if (autoStartMusic === 'true') {
       const savedTime = localStorage.getItem('bgm_current_time');
@@ -886,27 +887,47 @@
         bgm.play().then(() => {
           isMusicPlaying = true;
           if (bgmCtrl) bgmCtrl.innerText = "🎵 BGM: ON";
-        }).catch(e => console.log("音樂自動播放受阻：", e));
+        }).catch(e => console.log(e));
         localStorage.removeItem('bgm_current_time');
       }
       localStorage.removeItem('midnight-alchemy-music-auto-start');
     }
 
+    // 2. 📱 雲端圖片終極大解鎖
     const params = new URLSearchParams(window.location.search);
-    const sharedColor = params.get('color');
-    const sharedName = params.get('name');
-    const sharedQuote = params.get('quote');
+    const shareId = params.get('share');
 
-    if (sharedColor && sharedName) {
-      const state = {
-        charName: decodeURIComponent(sharedName),
-        quote: decodeURIComponent(sharedQuote || ''),
-        color: sharedColor,
-        photoDataUrl: '' 
-      };
-      if (typeof applySharedState === 'function') {
-        applySharedState(state);
-      }
+    if (shareId) {
+      // 🌟 核心魔術：先把整個網頁的舊畫面清空，告訴使用者正在加載你的大照片
+      document.body.innerHTML = `
+        <div id="loading-img-cloud" style="width: 100vw; height: 100vh; background: #0b0b0b; display: flex; justify-content: center; align-items: center; flex-direction: column; font-family: sans-serif;">
+          <div style="color: #ffdd67; font-size: 20px; font-weight: bold; margin-bottom: 10px; letter-spacing: 1px;">深夜煉金術：正在沖洗結果照片...</div>
+          <div style="color: #666; font-size: 13px;">（正在從雲端回收黑眼圈報告，請稍候）</div>
+        </div>
+      `;
+
+      // 🚀 飛去 Google 試算表，憑藉這組 ID 撈回你點擊儲存時塞進去的「完全體 Base64 大照片」
+      fetch(`${DATABASE_API_URL}?id=${shareId}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === "success" && data.photoDataUrl) {
+            
+            // 👑 解鎖成功：直接用滿版（100%）的方式，把你的成果圖片噴射在整個手機螢幕上！
+            // 這樣手機一掃進來，看到的「就是一張乾乾淨淨、純粹的結果大照片」，沒有任何多餘的網頁按鈕！
+            document.body.innerHTML = `
+              <div style="width: 100vw; min-height: 100vh; background: #141414; display: flex; justify-content: center; align-items: center; margin: 0; padding: 20px; box-sizing: border-box;">
+                <img src="${data.photoDataUrl}" alt="成果回收報告" style="width: 100%; max-width: 900px; height: auto; border-radius: 16px; box-shadow: 0 12px 40px rgba(0,0,0,0.8); display: block;">
+              </div>
+            `;
+            
+          } else {
+            document.body.innerHTML = `<div style="color: #ff4444; text-align:center; padding-top:100px;">找不到這張照片報告</div>`;
+          }
+        })
+        .catch(err => {
+          console.error("讀取雲端相簿失敗：", err);
+          document.body.innerHTML = `<div style="color: #ff4444; text-align:center; padding-top:100px;">連線雲端資料庫失敗</div>`;
+        });
     }
   });
 </script>
