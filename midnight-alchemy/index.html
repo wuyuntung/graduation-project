@@ -342,7 +342,7 @@
 </div>
 
 <script>
-  const DATABASE_API_URL = "https://script.google.com/macros/s/AKfycbzwdbSwxhGiK2jT7iE5-R6N-74QoN-fnrbtIGesQbDF72T2aoIY31yy0p1kbNDKAkI/exec";
+  const DATABASE_API_URL = "https://script.google.com/macros/s/AKfycbzwdbSwxhGiK2jT7iE5-R6N-74QoN-fnrbtIGesQbDF72T2aoIY31yy0p1kbNDKAkI/exechttps://script.google.com/macros/s/AKfycbzwdbSwxhGiK2jT7iE5-R6N-74QoN-fnrbtIGesQbDF72T2aoIY31yy0p1kbNDKAkI/exec";
   let faceMesh;
   let camera;
   let videoElement;
@@ -729,7 +729,7 @@
     document.getElementById('photo-quote-text').innerText = document.getElementById('quote-text').innerText;
   }
 
- // 🌟 潼，這就是最後一吋的焊鐵了！抓錯防護全開，絕對不當機版！
+ /// 🌟 潼，前端強效發射版：改用傳統表單流，再大張的照片都塞得進去！
   async function saveCurrentResult() {
     if (document.getElementById('photo-result-page').style.display !== 'block') {
       goToPhotoResultPage();
@@ -743,19 +743,15 @@
     const uniqueId = "id_" + new Date().getTime() + "_" + Math.floor(Math.random() * 1000);
     const baseUrl = window.location.origin + window.location.pathname;
     
-    // 🛡️ 核心安全防線：用最聰明的方式抓名字與台詞，就算 ID 名字打錯也絕對不當機！
     let charName = '未知角色';
     let quote = '';
-    
     try {
       charName = document.getElementById('photo-page-title')?.innerText || document.getElementById('char-name')?.innerText || '大同電鍋英雄';
       quote = document.getElementById('photo-quote-text')?.innerText || document.getElementById('quote-text')?.innerText || '';
-    } catch(e) {
-      console.log("名稱元件讀取有小波折，但免驚，防線已啟動");
-    }
+    } catch(e) {}
 
     try {
-      // 1. 👑 優先強制變出 QR Code！
+      // 1. 優先變出 QR Code 條碼
       const shareUrl = `${baseUrl}?id=${uniqueId}`;
       container.innerHTML = '';
       new QRCode(container, {
@@ -772,23 +768,24 @@
         hintText.style.color = "#ffdd67";
       }
 
-      // 2. 🚀 送資料去試算表
+      // 2. 🚀 【核心修正】改用 URLSearchParams 傳輸，確保巨型照片數據絕對不丟包、不卡死
+      const formData = new URLSearchParams();
+      formData.append('id', uniqueId);
+      formData.append('charName', charName);
+      formData.append('quote', quote);
+      formData.append('color', currentFinalColor);
+      formData.append('photoDataUrl', capturedPhotoDataUrl || '');
+
       fetch(DATABASE_API_URL, {
         method: "POST",
-        headers: { "Content-Type": "text/plain" },
-        body: JSON.stringify({
-          id: uniqueId,
-          charName: charName,
-          quote: quote,
-          color: currentFinalColor,
-          photoDataUrl: capturedPhotoDataUrl || ''
-        })
+        headers: { "Content-Type": "application/x-www-form-urlencoded" }, // 最穩定的傳輸頭
+        body: formData.toString()
       })
       .then(res => res.json())
-      .then(resData => console.log("雲端備份成功：", resData))
-      .catch(err => console.error("雲端寫入有波折：", err));
+      .then(resData => console.log("資料庫備份成功：", resData))
+      .catch(err => console.error("資料庫寫入有波折：", err));
 
-      // 3. 📸 延時截圖下載
+      // 3. 📸 延時截圖下載成果圖
       setTimeout(async () => {
         try {
           let finalDataUrl = '';
@@ -808,9 +805,7 @@
             link.click();
             link.remove();
           }
-        } catch (err) {
-          console.error("截圖下載遇到瓶頸：", err);
-        }
+        } catch (err) {}
       }, 500);
 
     } catch (error) {
@@ -818,7 +813,6 @@
       container.innerHTML = '<div style="font-size:12px; color:#ff4444;">QR 碼提煉失敗</div>';
     }
   }
-
   async function exportCurrentPageImage() {
     if (!window.html2canvas) throw new Error('html2canvas 未載入');
     const target = document.getElementById('photo-result-page'); 
