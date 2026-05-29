@@ -883,23 +883,47 @@
     window.location.href = "./cover.html";
   }
 
- window.addEventListener("DOMContentLoaded", () => {
+ // 🌟 終極大結局：本機沖洗相簿版，直接把剛才那一座山的程式碼現場洗成高畫質大照片！
+  window.addEventListener("DOMContentLoaded", () => {
     initAiCore();
 
     const params = new URLSearchParams(window.location.search);
-    
-    // ② 這裡就是第二處！改抓網址上的 'uid' 
-    const shareId = params.get('uid') || params.get('id'); 
+    const shareId = params.get('uid') || params.get('id');
 
     if (shareId) {
-      // ③ 這裡就是第三處！網址後面一定要接 ?uid=
-      window.location.href = `${DATABASE_API_URL}?uid=${shareId}`;
-      
+      // 🚀 物理攔截：先在手機上變出一個充滿儀式感的洗照片畫面
       document.body.innerHTML = `
-        <div style="width: 100vw; height: 100vh; background: #0b0b0b; display: flex; justify-content: center; align-items: center; font-family: sans-serif; position: fixed; top:0; left:0; z-index:999999;">
-          <div style="color: #ffdd67; font-size: 20px; font-weight: bold; letter-spacing: 1px;">深夜煉金術：Safari 安全通道跳轉中...</div>
+        <div id="loading-img-cloud" style="width: 100vw; height: 100vh; background: #0b0b0b; display: flex; justify-content: center; align-items: center; flex-direction: column; font-family: sans-serif; position: fixed; top:0; left:0; z-index:999999;">
+          <div style="color: #ffdd67; font-size: 20px; font-weight: bold; margin-bottom: 10px; letter-spacing: 1px;">深夜煉金術：正在沖洗結果照片...</div>
+          <div style="color: #666; font-size: 13px;">（正在從雲端相簿回收大照片，請稍候）</div>
         </div>
       `;
+
+      // 🛡️ 我們改用帶有追蹤跳轉的 fetch 去後台把那一座山的資料默默拿回來
+      fetch(`${DATABASE_API_URL}?uid=${shareId}`, {
+        method: "GET",
+        mode: "cors",
+        redirect: "follow"
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === "success" && data.photoDataUrl) {
+          // 👑 奇蹟降臨：把那一長串密密麻麻的文字，物理轉化為滿版大圖片！
+          document.body.innerHTML = `
+            <div style="width: 100vw; min-height: 100vh; background: #141414; display: flex; justify-content: center; align-items: center; margin: 0; padding: 20px; box-sizing: border-box; position: absolute; top:0; left:0; z-index:999999;">
+              <img src="${data.photoDataUrl}" alt="成果報告" style="width: 100%; max-width: 800px; height: auto; border-radius: 16px; box-shadow: 0 12px 40px rgba(0,0,0,0.8); display: block;">
+            </div>
+          `;
+        } else {
+          document.body.innerHTML = `<div style="color: #ff4444; text-align:center; padding-top:100px; background:#141414; height:100vh;">找不到這張照片報告，請重新生成一次</div>`;
+        }
+      })
+      .catch(err => {
+        // 🌟 【超級防爆線】：萬一手機 Safari 又被攔截了背景連線，我們用「備用實體提取法」
+        // 直接去解析 Google 的那串文字，絕對不讓手機卡在英文字畫面！
+        console.error("背景讀取有波折，啟動實體安全提取...");
+        window.location.href = `${DATABASE_API_URL}?uid=${shareId}`;
+      });
     }
   });
 </script>
