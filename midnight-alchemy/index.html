@@ -729,18 +729,18 @@
     document.getElementById('photo-quote-text').innerText = document.getElementById('quote-text').innerText;
   }
 
- // 🌟 潼，整頁打包終極版：直接把一整張卡片（含阿紫、名字、自拍、台詞）全部截圖打包送上雲端！
- // ⭕ 修正後的最頂部（下載完直接放行，不卡按鈕）：
-  async function saveCurrentResult() {
-    // 如果根本不在結果頁，直接放行去走原本的頁面跳轉
+ // 🌟 潼，絕對放行版：0 秒切換回首頁，背景偷偷發射，絕對不卡按鈕、不吃掉角色圖！
+  function saveCurrentResult() {
+    // 1. 如果根本不在結果頁，直接放行，讓它去走原本的按鈕跳轉
     if (document.getElementById('photo-result-page').style.display !== 'block') {
       return; 
     }
+
     const container = document.getElementById('qr-code-container');
     const hintText = document.getElementById('qr-text-hint');
     if (!container) return;
 
-    // 1. 先生成唯一的號碼牌 ID
+    // 2. 現場變出唯一的 ID 號碼牌與 QR Code
     const uniqueId = "id_" + new Date().getTime() + "_" + Math.floor(Math.random() * 1000);
     const baseUrl = window.location.origin + window.location.pathname;
     
@@ -752,7 +752,6 @@
     } catch(e) {}
 
     try {
-      // 2. 現場變出 QR Code 條碼
       const shareUrl = `${baseUrl}?uid=${uniqueId}`;
       container.innerHTML = '';
       new QRCode(container, {
@@ -769,46 +768,58 @@
         hintText.style.color = "#ffdd67";
       }
 
-      // 3. 📸 關鍵核心：直接現場執行 html2canvas 截圖「整頁卡片」
-      console.log("正在打包整頁卡片中...");
-      let finalDataUrl = '';
-      if (typeof exportCurrentPageImage === 'function') {
-        finalDataUrl = await exportCurrentPageImage();
-      } else if (window.html2canvas) {
-        const target = document.getElementById('photo-result-page');
-        const canvas = await html2canvas(target, { backgroundColor: '#141414', scale: 2, useCORS: true });
-        finalDataUrl = canvas.toDataURL('image/jpeg', 0.9);
-      }
-
-      // 4. 🚀 把這張「包含整頁完整卡片的大圖」丟給 Google 試算表
-      fetch(DATABASE_API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({
-          id: uniqueId,
-          charName: charName,
-          quote: quote,
-          color: currentFinalColor,
-          photoDataUrl: finalDataUrl // 👑 這裡換成整頁大圖，不再只是單純的攝影機照片了！
+      // 3. 🚀 【核心分流】：我們把上傳資料和實體下載全部移到後台跑
+      // 這樣可以確保這顆按鈕按下去的瞬間，100% 不會卡住，也不會污染畫面的圖片！
+      setTimeout(() => {
+        // 先偷偷把最安全的自拍照上傳到雲端，確保手機掃碼絕對看得到人
+        fetch(DATABASE_API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            id: uniqueId,
+            charName: charName,
+            quote: quote,
+            color: currentFinalColor,
+            photoDataUrl: capturedPhotoDataUrl || '' // 上傳自拍照
+          })
         })
-      })
-      .then(res => res.json())
-      .then(resData => console.log("雲端整頁相簿備份成功！", resData))
-      .catch(err => console.error("雲端備份有小波折：", err));
+        .then(res => res.json())
+        .then(resData => console.log("雲端備份成功！", resData))
+        .catch(err => console.error("雲端備份稍有波折", err));
 
-      // 5. 📥 同步觸發電腦端的實體檔案下載
-      if (finalDataUrl) {
-        const link = document.createElement('a');
-        link.href = finalDataUrl;
-        link.download = `${charName}_成果回收報告.jpg`;
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-      }
+        // 觸發電腦實體下載（如果 html2canvas 還能動的話）
+        if (window.html2canvas) {
+          const target = document.getElementById('photo-result-page');
+          html2canvas(target, { backgroundColor: '#141414', scale: 2, useCORS: true, logging: false })
+          .then(canvas => {
+            const finalDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+            const link = document.createElement('a');
+            link.href = finalDataUrl;
+            link.download = `${charName}_成果回收報告.jpg`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+          });
+        }
+      }, 50);
 
     } catch (error) {
       console.error('儲存核心程序出錯：', error);
-      container.innerHTML = '<div style="font-size:12px; color:#ff4444;">QR 碼提煉失敗</div>';
+    }
+
+    // 4. 👑 【大結局物理跳轉】：無論後台下載或上傳走得如何，按鈕按下去的這一秒，
+    // 強制執行原本的跳回首頁邏輯！把網頁強行帶回 cover！
+    try {
+      if (typeof goToCoverPage === 'function') {
+        goToCoverPage();
+      } else {
+        // 如果你的首頁切換叫別的名字，請在這裡手動換頁（例如切換 display）
+        document.getElementById('photo-result-page').style.display = 'none';
+        document.getElementById('cover-page').style.display = 'block'; // 或者是你的首頁 ID
+      }
+    } catch(err) {
+      console.error("切換首頁失敗，強制重整網頁回首頁：");
+      window.location.href = window.location.origin + window.location.pathname; // 最粗暴的直接回首頁
     }
   }
   function restoreReadyToCaptureState() {
