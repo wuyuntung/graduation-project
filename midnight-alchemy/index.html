@@ -729,7 +729,8 @@
     document.getElementById('photo-quote-text').innerText = document.getElementById('quote-text').innerText;
   }
 
- async function saveCurrentResult() {
+ // 🌟 潼，整頁打包終極版：直接把一整張卡片（含阿紫、名字、自拍、台詞）全部截圖打包送上雲端！
+  async function saveCurrentResult() {
     if (document.getElementById('photo-result-page').style.display !== 'block') {
       goToPhotoResultPage();
       return;
@@ -739,6 +740,7 @@
     const hintText = document.getElementById('qr-text-hint');
     if (!container) return;
 
+    // 1. 先生成唯一的號碼牌 ID
     const uniqueId = "id_" + new Date().getTime() + "_" + Math.floor(Math.random() * 1000);
     const baseUrl = window.location.origin + window.location.pathname;
     
@@ -750,7 +752,7 @@
     } catch(e) {}
 
     try {
-      // 1. 生成專屬號碼牌網址並畫出 QR Code
+      // 2. 現場變出 QR Code 條碼
       const shareUrl = `${baseUrl}?uid=${uniqueId}`;
       container.innerHTML = '';
       new QRCode(container, {
@@ -767,73 +769,48 @@
         hintText.style.color = "#ffdd67";
       }
 
-      // 2. 👑 盲發無視覺紅字版：加入 mode: 'no-cors'，徹底斷絕瀏覽器的 CORS 傲嬌報錯！
+      // 3. 📸 關鍵核心：直接現場執行 html2canvas 截圖「整頁卡片」
+      console.log("正在打包整頁卡片中...");
+      let finalDataUrl = '';
+      if (typeof exportCurrentPageImage === 'function') {
+        finalDataUrl = await exportCurrentPageImage();
+      } else if (window.html2canvas) {
+        const target = document.getElementById('photo-result-page');
+        const canvas = await html2canvas(target, { backgroundColor: '#141414', scale: 2, useCORS: true });
+        finalDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+      }
+
+      // 4. 🚀 把這張「包含整頁完整卡片的大圖」丟給 Google 試算表
       fetch(DATABASE_API_URL, {
         method: "POST",
-        mode: "no-cors", // 🌟 穿上隱形斗篷，告訴瀏覽器不要檢查收據！
-        headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({
           id: uniqueId,
           charName: charName,
           quote: quote,
           color: currentFinalColor,
-          photoDataUrl: capturedPhotoDataUrl || '' 
+          photoDataUrl: finalDataUrl // 👑 這裡換成整頁大圖，不再只是單純的攝影機照片了！
         })
       })
-      .then(() => {
-        // 因為開了 no-cors，我們直接當作成功，不讀取 res.json()，確保絕對不噴紅字！
-        console.log("雲端資料庫已強行發射並寫入！號碼牌：", uniqueId);
-      })
-      .catch(err => console.error("發射有波折：", err));
-      // 3. 📸 延時截圖下載
-      setTimeout(async () => {
-        try {
-          let finalDataUrl = '';
-          if (typeof exportCurrentPageImage === 'function') {
-            finalDataUrl = await exportCurrentPageImage();
-          } else if (window.html2canvas) {
-            const target = document.getElementById('photo-result-page');
-            const canvas = await html2canvas(target, { backgroundColor: '#141414', scale: 2, useCORS: true });
-            finalDataUrl = canvas.toDataURL('image/jpeg', 0.9);
-          }
-          
-          if (finalDataUrl) {
-            const link = document.createElement('a');
-            link.href = finalDataUrl;
-            link.download = `${charName}_成果回收報告.jpg`;
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-          }
-        } catch (err) {}
-      }, 500);
+      .then(res => res.json())
+      .then(resData => console.log("雲端整頁相簿備份成功！", resData))
+      .catch(err => console.error("雲端備份有小波折：", err));
+
+      // 5. 📥 同步觸發電腦端的實體檔案下載
+      if (finalDataUrl) {
+        const link = document.createElement('a');
+        link.href = finalDataUrl;
+        link.download = `${charName}_成果回收報告.jpg`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+      }
 
     } catch (error) {
       console.error('儲存核心程序出錯：', error);
       container.innerHTML = '<div style="font-size:12px; color:#ff4444;">QR 碼提煉失敗</div>';
     }
   }
-
-  async function exportCurrentPageImage() {
-    if (!window.html2canvas) throw new Error('html2canvas 未載入');
-    const target = document.getElementById('photo-result-page'); 
-    if (!target) throw new Error('找不到 photo-result-page');
-    const canvas = await html2canvas(target, {
-      backgroundColor: '#141414', scale: 2, useCORS: true, logging: false
-    });
-    return canvas.toDataURL('image/jpeg', 0.9);
-  }
-
-  function ensureResultEyeImages() {
-    const resultPage = document.getElementById('result-page'); if (!resultPage) return;
-    if (!document.getElementById('left-eye-img')) {
-      const newLeft = document.createElement('img'); newLeft.id = 'left-eye-img'; newLeft.className = 'eye-grow-img'; resultPage.appendChild(newLeft);
-    }
-    if (!document.getElementById('right-eye-img')) {
-      const newRight = document.createElement('img'); newRight.id = 'right-eye-img'; newRight.className = 'eye-grow-img'; resultPage.appendChild(newRight);
-    }
-  }
-
   function restoreReadyToCaptureState() {
     ensureResultEyeImages();
     const lImg = document.getElementById('left-eye-img'); const rImg = document.getElementById('right-eye-img');
