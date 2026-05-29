@@ -751,7 +751,7 @@
 
     try {
       // 1. 生成專屬號碼牌網址並畫出 QR Code
-      const shareUrl = `${baseUrl}?id=${uniqueId}`;
+      const shareUrl = `${baseUrl}?uid=${uniqueId}`;
       container.innerHTML = '';
       new QRCode(container, {
         text: shareUrl,
@@ -883,48 +883,23 @@
     window.location.href = "./cover.html";
   }
 
- // 🌟 手機掃碼攔截器：強制解鎖跨域限制，不管誰的手機掃進來通通給過！
-  window.addEventListener("DOMContentLoaded", () => {
+ window.addEventListener("DOMContentLoaded", () => {
     initAiCore();
 
     const params = new URLSearchParams(window.location.search);
-    const shareId = params.get('id');
+    
+    // ② 這裡就是第二處！改抓網址上的 'uid' 
+    const shareId = params.get('uid') || params.get('id'); 
 
     if (shareId) {
-      // 物理攔截網頁本人
+      // ③ 這裡就是第三處！網址後面一定要接 ?uid=
+      window.location.href = `${DATABASE_API_URL}?uid=${shareId}`;
+      
       document.body.innerHTML = `
-        <div id="loading-img-cloud" style="width: 100vw; height: 100vh; background: #0b0b0b; display: flex; justify-content: center; align-items: center; flex-direction: column; font-family: sans-serif; position: fixed; top:0; left:0; z-index:999999;">
-          <div style="color: #ffdd67; font-size: 20px; font-weight: bold; margin-bottom: 10px; letter-spacing: 1px;">深夜煉金術：正在沖洗結果照片...</div>
-          <div style="color: #666; font-size: 13px;">（正在從雲端相簿回收大照片，請稍候）</div>
+        <div style="width: 100vw; height: 100vh; background: #0b0b0b; display: flex; justify-content: center; align-items: center; font-family: sans-serif; position: fixed; top:0; left:0; z-index:999999;">
+          <div style="color: #ffdd67; font-size: 20px; font-weight: bold; letter-spacing: 1px;">深夜煉金術：Safari 安全通道跳轉中...</div>
         </div>
       `;
-
-      // 🛡️ 加上 mode: "cors" 盾牌，徹底粉碎任何手機瀏覽器的跨域阻擋！
-      fetch(`${DATABASE_API_URL}?id=${shareId}`, {
-        method: "GET",
-        mode: "cors", 
-        headers: { "Accept": "application/json" }
-      })
-      .then(res => {
-        if (!res.ok) throw new Error("網路連線不給力");
-        return res.json();
-      })
-      .then(data => {
-        if (data.status === "success" && data.photoDataUrl) {
-          // 👑 奇蹟降臨：滿版秀出全宇宙唯一的完全體大照片！
-          document.body.innerHTML = `
-            <div style="width: 100vw; min-height: 100vh; background: #141414; display: flex; justify-content: center; align-items: center; margin: 0; padding: 20px; box-sizing: border-box; position: absolute; top:0; left:0; z-index:999999;">
-              <img src="${data.photoDataUrl}" alt="成果報告" style="width: 100%; max-width: 800px; height: auto; border-radius: 16px; box-shadow: 0 12px 40px rgba(0,0,0,0.8); display: block;">
-            </div>
-          `;
-        } else {
-          document.body.innerHTML = `<div style="color: #ff4444; text-align:center; padding-top:100px; background:#141414; height:100vh; font-family:sans-serif;">找不到這張照片報告，請重新生成一次</div>`;
-        }
-      })
-      .catch(err => {
-        console.error("讀取雲端相簿失敗：", err);
-        document.body.innerHTML = `<div style="color: #ff4444; text-align:center; padding-top:100px; background:#141414; height:100vh; font-family:sans-serif;">連線雲端資料庫失敗，請確認網路或重新掃描</div>`;
-      });
     }
   });
 </script>
