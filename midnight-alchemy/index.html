@@ -729,9 +729,8 @@
     document.getElementById('photo-quote-text').innerText = document.getElementById('quote-text').innerText;
   }
 
- // 🌟 潼，絕對放行版：0 秒切換回首頁，背景偷偷發射，絕對不卡按鈕、不吃掉角色圖！
+ // 🌟 潼，這顆按鈕只負責：生 QR 碼、背景上傳試算表、下載成果圖！絕對不干涉任何網頁換頁！
   function saveCurrentResult() {
-    // 1. 如果根本不在結果頁，直接放行，讓它去走原本的按鈕跳轉
     if (document.getElementById('photo-result-page').style.display !== 'block') {
       return; 
     }
@@ -740,7 +739,7 @@
     const hintText = document.getElementById('qr-text-hint');
     if (!container) return;
 
-    // 2. 現場變出唯一的 ID 號碼牌與 QR Code
+    // 生成唯一的 ID 號碼牌與 QR Code
     const uniqueId = "id_" + new Date().getTime() + "_" + Math.floor(Math.random() * 1000);
     const baseUrl = window.location.origin + window.location.pathname;
     
@@ -768,10 +767,9 @@
         hintText.style.color = "#ffdd67";
       }
 
-      // 3. 🚀 【核心分流】：我們把上傳資料和實體下載全部移到後台跑
-      // 這樣可以確保這顆按鈕按下去的瞬間，100% 不會卡住，也不會污染畫面的圖片！
+      // 🚀 把耗費效能的截圖和上傳移到 setTimeout 後台跑，這樣網頁絕對不會卡住或讓角色消失！
       setTimeout(() => {
-        // 先偷偷把最安全的自拍照上傳到雲端，確保手機掃碼絕對看得到人
+        // 上傳最安全的自拍照大數據去雲端
         fetch(DATABASE_API_URL, {
           method: "POST",
           headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -780,14 +778,14 @@
             charName: charName,
             quote: quote,
             color: currentFinalColor,
-            photoDataUrl: capturedPhotoDataUrl || '' // 上傳自拍照
+            photoDataUrl: capturedPhotoDataUrl || '' 
           })
         })
         .then(res => res.json())
         .then(resData => console.log("雲端備份成功！", resData))
         .catch(err => console.error("雲端備份稍有波折", err));
 
-        // 觸發電腦實體下載（如果 html2canvas 還能動的話）
+        // 觸發電腦實體 JPEG 下載
         if (window.html2canvas) {
           const target = document.getElementById('photo-result-page');
           html2canvas(target, { backgroundColor: '#141414', scale: 2, useCORS: true, logging: false })
@@ -804,22 +802,7 @@
       }, 50);
 
     } catch (error) {
-      console.error('儲存核心程序出錯：', error);
-    }
-
-    // 4. 👑 【大結局物理跳轉】：無論後台下載或上傳走得如何，按鈕按下去的這一秒，
-    // 強制執行原本的跳回首頁邏輯！把網頁強行帶回 cover！
-    try {
-      if (typeof goToCoverPage === 'function') {
-        goToCoverPage();
-      } else {
-        // 如果你的首頁切換叫別的名字，請在這裡手動換頁（例如切換 display）
-        document.getElementById('photo-result-page').style.display = 'none';
-        document.getElementById('cover-page').style.display = 'block'; // 或者是你的首頁 ID
-      }
-    } catch(err) {
-      console.error("切換首頁失敗，強制重整網頁回首頁：");
-      window.location.href = window.location.origin + window.location.pathname; // 最粗暴的直接回首頁
+      console.error('儲存程序出錯：', error);
     }
   }
   function restoreReadyToCaptureState() {
