@@ -855,7 +855,7 @@
 
   function goToCoverPage() {
     // 👑 重新回收按鈕：直接清除網址號碼牌，以最乾淨的狀態導向首頁，絕對不卡關、不留殘留！
-    window.location.href = window.location.origin + window.location.pathname;
+    window.location.href = "./cover.html";
   }
 
   // 🌟 終極大結局：本機沖洗相簿版，直接在手機上現場洗成高畫質大照片！
@@ -896,7 +896,7 @@
       });
     }
   });
-  
+
   function restoreReadyToCaptureState() {
     ensureResultEyeImages();
     const lImg = document.getElementById('left-eye-img'); const rImg = document.getElementById('right-eye-img');
