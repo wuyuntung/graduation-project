@@ -730,12 +730,12 @@
   }
 
  // 🌟 潼，整頁打包終極版：直接把一整張卡片（含阿紫、名字、自拍、台詞）全部截圖打包送上雲端！
+ // ⭕ 修正後的最頂部（下載完直接放行，不卡按鈕）：
   async function saveCurrentResult() {
+    // 如果根本不在結果頁，直接放行去走原本的頁面跳轉
     if (document.getElementById('photo-result-page').style.display !== 'block') {
-      goToPhotoResultPage();
-      return;
+      return; 
     }
-
     const container = document.getElementById('qr-code-container');
     const hintText = document.getElementById('qr-text-hint');
     if (!container) return;
